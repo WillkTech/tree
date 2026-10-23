@@ -142,6 +142,22 @@ fn main() {
     .filter(|path| !path.is_empty())
     .collect::<Vec<_>>();
 
+    // Tree style keeps the script's arg shape: `tree [depth] [directory]`.
+    // The first all-digit positional is the display depth, the first
+    // non-digit is the path. The dust style keeps paths as the only
+    // positional (upstream behavior).
+    let (target_dirs, tree_depth) = if options.style == cli::OutputStyle::Tree {
+        let (depth, paths) = split_tree_args(&target_dirs);
+        let paths = if paths.is_empty() {
+            vec![".".to_owned()]
+        } else {
+            paths
+        };
+        (paths, depth)
+    } else {
+        (target_dirs, None)
+    };
+
     let summarize_file_types = options.file_types;
 
     let filter_regexs = get_regex_value(options.filter.as_ref());
@@ -152,7 +168,12 @@ fn main() {
         None => get_width_of_terminal(),
     };
 
-    let depth = config.get_depth(&options);
+    let depth = if options.style == cli::OutputStyle::Tree {
+        // Tree style defaults to the script's depth 0 (top level only).
+        options.depth.or(tree_depth).or(config.depth).unwrap_or(0)
+    } else {
+        config.get_depth(&options)
+    };
 
     // If depth is set, or the output is json (which is not rendered to a
     // terminal), then we set the default number_of_lines to be max
@@ -287,6 +308,9 @@ fn main() {
                 display_depth: depth,
                 sort: options.sort,
                 colors: is_colors,
+                show_files: options.show_files,
+                by_filecount,
+                follow_links,
             };
             let mut out = std::io::BufWriter::new(std::io::stdout());
             tree_style::render_tree(&top_level_nodes, &opts, &mut out).unwrap();
@@ -415,6 +439,21 @@ fn print_any_errors(print_errors: bool, final_errors: &RuntimeErrors) {
     }
 }
 
+/// Tree-style arg split: first all-digit positional = depth, rest = paths
+/// (the script's `[[ "$1" == <-> ]]` test).
+fn split_tree_args(paths: &[String]) -> (Option<usize>, Vec<String>) {
+    let mut depth = None;
+    let mut out = Vec::new();
+    for p in paths {
+        if depth.is_none() && !p.is_empty() && p.bytes().all(|b| b.is_ascii_digit()) {
+            depth = p.parse().ok();
+        } else {
+            out.push(p.clone());
+        }
+    }
+    (depth, out)
+}
+
 fn read_paths_from_source(path: &str, null_terminated: bool) -> Vec<String> {
     let from_stdin = path == "-";
 
@@ -459,6 +498,33 @@ fn read_paths_from_source(path: &str, null_terminated: bool) -> Vec<String> {
             eprintln!("Failed to read file: {msg}");
             vec![".".to_owned()]
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn args(v: &[&str]) -> Vec<String> {
+        v.iter().map(|s| s.to_string()).collect()
+    }
+
+    #[test]
+    fn test_split_tree_args() {
+        // The script's arg shape: `tree 2 /some/dir`, `tree 1`, `tree dir`.
+        assert_eq!(
+            split_tree_args(&args(&["2", "/tmp"])),
+            (Some(2), args(&["/tmp"]))
+        );
+        assert_eq!(split_tree_args(&args(&["1"])), (Some(1), args(&[])));
+        assert_eq!(split_tree_args(&args(&["/tmp"])), (None, args(&["/tmp"])));
+        assert_eq!(split_tree_args(&args(&[])), (None, args(&[])));
+        // Only the first all-digit positional is the depth; a dash-name file
+        // stays a path component.
+        assert_eq!(
+            split_tree_args(&args(&["/tmp", "3"])),
+            (Some(3), args(&["/tmp"]))
+        );
     }
 }
 

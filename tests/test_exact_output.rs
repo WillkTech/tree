@@ -61,7 +61,8 @@ fn initialize() {
 
 fn run_cmd<T: AsRef<OsStr>>(command_args: &[T]) -> Output {
     initialize();
-    let mut to_run = cargo_bin_cmd!("dust");
+    let mut to_run = cargo_bin_cmd!("tree");
+    to_run.arg("--style").arg("dust");
     // Hide progress bar
     to_run.arg("-P");
     for p in command_args {

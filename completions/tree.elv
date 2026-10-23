@@ -2,14 +2,14 @@
 use builtin;
 use str;
 
-set edit:completion:arg-completer[dust] = {|@words|
+set edit:completion:arg-completer[tree] = {|@words|
     fn spaces {|n|
         builtin:repeat $n ' ' | str:join ''
     }
     fn cand {|text desc|
         edit:complex-candidate $text &display=$text' '(spaces (- 14 (wcswidth $text)))$desc
     }
-    var command = 'dust'
+    var command = 'tree'
     for word $words[1..-1] {
         if (str:has-prefix $word '-') {
             break
@@ -17,7 +17,7 @@ set edit:completion:arg-completer[dust] = {|@words|
         set command = $command';'$word
     }
     var completions = [
-        &'dust'= {
+        &'tree'= {
             cand -d 'Depth to show'
             cand --depth 'Depth to show'
             cand -T 'Number of threads to use'
@@ -52,8 +52,8 @@ set edit:completion:arg-completer[dust] = {|@words|
             cand --collapse 'Keep these directories collapsed'
             cand -m 'Directory ''size'' is max filetime of child files instead of disk size. while a/c/m for last accessed/changed/modified time'
             cand --filetime 'Directory ''size'' is max filetime of child files instead of disk size. while a/c/m for last accessed/changed/modified time'
-            cand --style 'Output style. tree reproduces the legacy tree.zsh layout byte-for-byte'
-            cand --sort 'Sort mode for --style tree: size (dirs first, size desc, name asc) or name. Ignored by the dust style'
+            cand --style 'Output style. tree (default) reproduces the legacy tree.zsh layout; dust keeps the upstream percent-bar output'
+            cand --sort 'Sort mode for the tree style: size (dirs first, size desc, name asc) or name. Ignored by the dust style'
             cand -p 'Subdirectories will not have their path shortened'
             cand --full-paths 'Subdirectories will not have their path shortened'
             cand -L 'dereference sym links - Treat sym links as directories and go into them'
@@ -91,6 +91,7 @@ set edit:completion:arg-completer[dust] = {|@words|
             cand --only-file 'Only files will be displayed. (Finds your largest files)'
             cand -j 'Output the directory tree as json to the current directory'
             cand --output-json 'Output the directory tree as json to the current directory'
+            cand --f 'Show files too (tree style lists folders only by default). Directories up to the display depth, files and symlinks one level deeper'
             cand -h 'Print help (see more with ''--help'')'
             cand --help 'Print help (see more with ''--help'')'
             cand -V 'Print version'

@@ -18,7 +18,7 @@ license = "Apache-2.0"
 travis-ci = { repository = "https://travis-ci.org/bootandy/dust" }
 
 [[bin]]
-name = "dust"
+name = "tree"
 path = "src/main.rs"
 
 [profile.release]
@@ -70,14 +70,14 @@ name = "integration"
 path = "tests/tests.rs"
 
 [package.metadata.binstall]
-pkg-url = "{ repo }/releases/download/v{ version }/dust-v{ version }-{ target }{ archive-suffix }"
-bin-dir = "dust-v{ version }-{ target }/{ bin }{ binary-ext }"
+pkg-url = "{ repo }/releases/download/v{ version }/tree-v{ version }-{ target }{ archive-suffix }"
+bin-dir = "tree-v{ version }-{ target }/{ bin }{ binary-ext }"
 
 [package.metadata.deb]
 section = "utils"
 assets = [
   [
-    "target/release/dust",
+    "target/release/tree",
     "usr/bin/",
     "755",
   ],
@@ -92,13 +92,13 @@ assets = [
     "644",
   ],
   [
-    "man-page/dust.1",
-    "usr/share/man/man1/dust.1",
+    "man-page/tree.1",
+    "usr/share/man/man1/tree.1",
     "644",
   ],
   [
-    "completions/dust.bash",
-    "usr/share/bash-completion/completions/dust",
+    "completions/tree.bash",
+    "usr/share/bash-completion/completions/tree",
     "644",
   ],
 ]

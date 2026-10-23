@@ -44,7 +44,8 @@ pub fn test_soft_sym_link() {
     let b = format!(" ┌── {}", file_path_s);
     let a = format!("─┴ {}", dir_s);
 
-    let mut cmd = cargo_bin_cmd!("dust");
+    let mut cmd = cargo_bin_cmd!("tree");
+    cmd.arg("--style").arg("dust");
     // Mac test runners create long filenames in tmp directories
     let output = cmd
         .args(["-p", "-c", "-s", "-w", "999", dir_s])
@@ -72,7 +73,8 @@ pub fn test_hard_sym_link() {
     let file_output = format!(" ┌── {}", file_path_s);
     let dirs_output = format!("─┴ {}", dir_s);
 
-    let mut cmd = cargo_bin_cmd!("dust");
+    let mut cmd = cargo_bin_cmd!("tree");
+    cmd.arg("--style").arg("dust");
     // Mac test runners create long filenames in tmp directories
     let output = cmd.args(["-p", "-c", "-w", "999", dir_s]).unwrap().stdout;
 
@@ -96,7 +98,8 @@ pub fn test_hard_sym_link_no_dup_multi_arg() {
     let link_name = dir_link.path().join("the_link");
     let link_name_s = link_it(link_name, file_path_s, false);
 
-    let mut cmd = cargo_bin_cmd!("dust");
+    let mut cmd = cargo_bin_cmd!("tree");
+    cmd.arg("--style").arg("dust");
 
     // Mac test runners create long filenames in tmp directories
     let output = cmd
@@ -123,7 +126,8 @@ pub fn test_recursive_sym_link() {
     let a = format!("─┬ {}", dir_s);
     let b = format!(" └── {}", link_name_s);
 
-    let mut cmd = cargo_bin_cmd!("dust");
+    let mut cmd = cargo_bin_cmd!("tree");
+    cmd.arg("--style").arg("dust");
     let output = cmd
         .arg("-p")
         .arg("-c")

@@ -30,6 +30,14 @@ pub struct TreeOpts {
     pub display_depth: usize,
     pub sort: SortMode,
     pub colors: bool,
+    // --f: also list files/symlinks (folders-only default). The old script's
+    // behavior == show_files=true.
+    pub show_files: bool,
+    // -f: size column shows file counts instead of bytes.
+    pub by_filecount: bool,
+    // -L: symlinks were dereferenced by the walker; symlinked dirs become
+    // normal traversed dirs (single row, real size).
+    pub follow_links: bool,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -117,11 +125,15 @@ fn components(node: &Node, root: &Node) -> Vec<Vec<u8>> {
     rel.split(|b| *b == b'/').map(|c| c.to_vec()).collect()
 }
 
-fn formatter(bytes: u64, rtype: RowType, display_depth: usize) -> Vec<u8> {
+fn formatter(bytes: u64, rtype: RowType, opts: &TreeOpts) -> Vec<u8> {
+    if opts.by_filecount {
+        // -f: the column shows counts (comma-grouped), no blank rule.
+        return fmt_comma(bytes);
+    }
     match rtype {
         // The depth-dependent symlink formatter quirk (D5): at depth 0 links
         // use the MiB formatter; at depth >= 1, comma-grouped truncating MiB.
-        RowType::Link if display_depth > 0 => {
+        RowType::Link if opts.display_depth > 0 => {
             if bytes < MIB {
                 b"        ".to_vec()
             } else {
@@ -132,8 +144,8 @@ fn formatter(bytes: u64, rtype: RowType, display_depth: usize) -> Vec<u8> {
     }
 }
 
-fn make_row(components: Vec<Vec<u8>>, rtype: RowType, size: u64, display_depth: usize) -> Row {
-    let formatted = formatter(size, rtype, display_depth);
+fn make_row(components: Vec<Vec<u8>>, rtype: RowType, size: u64, opts: &TreeOpts) -> Row {
+    let formatted = formatter(size, rtype, opts);
     Row {
         components,
         rtype,
@@ -144,39 +156,53 @@ fn make_row(components: Vec<Vec<u8>>, rtype: RowType, size: u64, display_depth: 
     }
 }
 
-/// gdu pass: directory rows only, descending through real dirs only (gdu
-/// does not follow symlinks); symlinked dirs appear as size-0 leaf rows.
-fn collect_dir_rows(root: &Node, n_eff: usize, rows: &mut Vec<Row>, display_depth: usize) {
+/// gdu pass: directory rows, descending through real dirs (and symlinked dirs
+/// when -L dereferenced them). Without -L, a symlinked dir is a size-0 leaf
+/// row (only with --f); with -L it is a normal traversed dir (single row).
+fn collect_dir_rows(root: &Node, n_eff: usize, rows: &mut Vec<Row>, opts: &TreeOpts) {
     let mut stack: Vec<&Node> = vec![root];
     while let Some(node) = stack.pop() {
         if node.depth + 1 > n_eff {
             continue;
         }
         for child in &node.children {
-            if child.filetype == FileType::Dir || resolves_to_dir(child) {
-                let size = if child.filetype == FileType::Dir {
-                    child.size
-                } else {
-                    0 // gdu reports the symlink inode's usage: 0 blocks
-                };
-                rows.push(make_row(
-                    components(child, root),
-                    RowType::Dir,
-                    size,
-                    display_depth,
-                ));
-            }
-            // gdu descends through real dirs only; symlinked dirs are leaves.
-            if child.filetype == FileType::Dir {
-                stack.push(child);
+            match child.filetype {
+                FileType::Dir => {
+                    rows.push(make_row(
+                        components(child, root),
+                        RowType::Dir,
+                        child.size,
+                        opts,
+                    ));
+                    stack.push(child);
+                }
+                FileType::Symlink if resolves_to_dir(child) => {
+                    if opts.follow_links {
+                        // -L: the walker descended and counted it; show it as
+                        // the real dir it points at (single row).
+                        rows.push(make_row(
+                            components(child, root),
+                            RowType::Dir,
+                            child.size,
+                            opts,
+                        ));
+                        stack.push(child);
+                    } else if opts.show_files {
+                        // The script's quirk: `[[ -d ]]` follows the link, so
+                        // symlinked dirs get a size-0 dir row (the link row
+                        // comes from the glob pass).
+                        rows.push(make_row(components(child, root), RowType::Dir, 0, opts));
+                    }
+                }
+                _ => {}
             }
         }
     }
 }
 
-/// glob pass: file + link rows, descending through real dirs AND symlinked
-/// dirs (zsh globs traverse symlinked directories).
-fn collect_glob_rows(root: &Node, l_eff: usize, rows: &mut Vec<Row>, display_depth: usize) {
+/// glob pass (--f only): file + link rows, descending through real dirs AND
+/// symlinked dirs (zsh globs traverse symlinked directories).
+fn collect_glob_rows(root: &Node, l_eff: usize, rows: &mut Vec<Row>, opts: &TreeOpts) {
     let mut stack: Vec<&Node> = vec![root];
     while let Some(node) = stack.pop() {
         if node.depth + 1 > l_eff {
@@ -185,8 +211,11 @@ fn collect_glob_rows(root: &Node, l_eff: usize, rows: &mut Vec<Row>, display_dep
         for child in &node.children {
             let rtype = match child.filetype {
                 FileType::File => Some(RowType::File),
-                FileType::Symlink => Some(RowType::Link),
-                FileType::Dir => None,
+                // With -L a symlinked dir is shown as a dir row only.
+                FileType::Symlink if !(opts.follow_links && resolves_to_dir(child)) => {
+                    Some(RowType::Link)
+                }
+                _ => None,
             };
             if let Some(rtype) = rtype {
                 let comps = components(child, root);
@@ -199,7 +228,12 @@ fn collect_glob_rows(root: &Node, l_eff: usize, rows: &mut Vec<Row>, display_dep
                     }
                     continue;
                 }
-                rows.push(make_row(comps, rtype, child.size_apparent, display_depth));
+                let size = if opts.by_filecount {
+                    child.size
+                } else {
+                    child.size_apparent
+                };
+                rows.push(make_row(comps, rtype, size, opts));
             }
             if child.filetype == FileType::Dir || resolves_to_dir(child) {
                 stack.push(child);
@@ -380,9 +414,12 @@ fn render_one(root: &Node, opts: &TreeOpts, out: &mut impl Write) -> std::io::Re
     };
 
     // gdu pass rows first, then glob pass rows (the script's insertion order).
+    // The glob pass (--f) is skipped in folders-only mode.
     let mut rows: Vec<Row> = Vec::with_capacity(estimate_rows(root, n_eff, l_eff));
-    collect_dir_rows(root, n_eff, &mut rows, display_depth);
-    collect_glob_rows(root, l_eff, &mut rows, display_depth);
+    collect_dir_rows(root, n_eff, &mut rows, opts);
+    if opts.show_files {
+        collect_glob_rows(root, l_eff, &mut rows, opts);
+    }
 
     let counters = top_level_counters(root);
     let dir_hdr = if counters.ndirs == 1 {
@@ -395,7 +432,12 @@ fn render_one(root: &Node, opts: &TreeOpts, out: &mut impl Write) -> std::io::Re
     } else {
         format!("{} files", counters.nfiles)
     };
-    let total_hdr = [fmt_comma(root.size / MIB), b"Mb".to_vec()].concat();
+    let total_hdr = if opts.by_filecount {
+        // -f: the header total is the total file count, no unit suffix.
+        fmt_comma(root.size)
+    } else {
+        [fmt_comma(root.size / MIB), b"Mb".to_vec()].concat()
+    };
 
     let mut maxw: usize = 8;
     for row in rows.iter() {
@@ -554,6 +596,17 @@ mod tests {
     use super::*;
     use std::path::PathBuf;
 
+    fn test_opts(display_depth: usize, show_files: bool) -> TreeOpts {
+        TreeOpts {
+            display_depth,
+            sort: SortMode::Size,
+            colors: false,
+            show_files,
+            by_filecount: false,
+            follow_links: false,
+        }
+    }
+
     fn node(name: &str, filetype: FileType, size: u64, size_apparent: u64, depth: usize) -> Node {
         Node {
             name: PathBuf::from(name),
@@ -705,8 +758,9 @@ mod tests {
         root.children.push(mid);
 
         let mut rows: Vec<Row> = Vec::new();
-        collect_dir_rows(&root, 1, &mut rows, 1);
-        collect_glob_rows(&root, 2, &mut rows, 1);
+        let opts = test_opts(1, true);
+        collect_dir_rows(&root, 1, &mut rows, &opts);
+        collect_glob_rows(&root, 2, &mut rows, &opts);
 
         let paths: Vec<String> = rows
             .iter()
@@ -769,11 +823,7 @@ mod tests {
         root_node.children.push(sz("dangling", FileType::Symlink));
 
         // display_depth 0: top level only; links use the MiB formatter (D5).
-        let opts = TreeOpts {
-            display_depth: 0,
-            sort: SortMode::Size,
-            colors: false,
-        };
+        let opts = test_opts(0, true);
         let mut out: Vec<u8> = Vec::new();
         render_one(&root_node, &opts, &mut out).unwrap();
         let text = String::from_utf8(out).unwrap();
@@ -808,6 +858,124 @@ mod tests {
     }
 
     #[test]
+    fn test_folders_only_default() {
+        // show_files=false (the new default): real dirs only. No file rows,
+        // no link rows, no double rows for symlinked dirs. Header/footer
+        // counts stay (they describe the base directory).
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        std::fs::create_dir(root.join("realdir")).unwrap();
+        std::fs::write(root.join("realdir/target.bin"), vec![0u8; 2 * MIB as usize]).unwrap();
+        std::fs::write(root.join("big.bin"), vec![0u8; 3 * MIB as usize]).unwrap();
+        std::os::unix::fs::symlink("realdir", root.join("link_to_dir")).unwrap();
+
+        let mut root_node = node(root.to_str().unwrap(), FileType::Dir, 5 * MIB, 0, 0);
+        let sz = |p: &str, ft: FileType, size: u64| {
+            let full = root.join(p);
+            node(full.to_str().unwrap(), ft, size, size, 1)
+        };
+        root_node
+            .children
+            .push(sz("realdir", FileType::Dir, 2 * MIB));
+        root_node
+            .children
+            .push(sz("big.bin", FileType::File, 3 * MIB));
+        root_node
+            .children
+            .push(sz("link_to_dir", FileType::Symlink, 0));
+        // The walker descends symlinked dirs in tree mode; give it a child.
+        let mut linkdir = sz("link_to_dir", FileType::Symlink, 0);
+        linkdir
+            .children
+            .push(sz("link_to_dir/inner.bin", FileType::File, 0));
+        root_node.children.pop();
+        root_node.children.push(linkdir);
+
+        let mut out: Vec<u8> = Vec::new();
+        render_one(&root_node, &test_opts(0, false), &mut out).unwrap();
+        let text = String::from_utf8(out).unwrap();
+        assert!(text.contains("\u{F024B} realdir/"), "{text}");
+        assert!(!text.contains("big.bin\n"), "no file rows: {text}");
+        assert!(!text.contains("\u{F0337}"), "no link rows: {text}");
+        assert!(
+            !text.contains("link_to_dir"),
+            "no symlinked-dir rows: {text}"
+        );
+        assert!(!text.contains("inner.bin"), "no descent rows: {text}");
+        assert!(text.contains("1 dir"), "header counts top-level real dirs");
+        assert!(text.ends_with("1 file (3.0 Mb)\n"), "footer stays: {text}");
+    }
+
+    #[test]
+    fn test_filecount_mode() {
+        // -f: the size column shows counts (comma-grouped), header total is
+        // the total count with no unit suffix.
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        let mut opts = test_opts(0, true);
+        opts.by_filecount = true;
+
+        let mut root_node = node(root.to_str().unwrap(), FileType::Dir, 1_234, 0, 0);
+        let full = root.join("d");
+        root_node
+            .children
+            .push(node(full.to_str().unwrap(), FileType::Dir, 1_000, 0, 1));
+        let full = root.join("f.bin");
+        root_node
+            .children
+            .push(node(full.to_str().unwrap(), FileType::File, 1, 655_360, 1));
+        let mut out: Vec<u8> = Vec::new();
+        render_one(&root_node, &opts, &mut out).unwrap();
+        let text = String::from_utf8(out).unwrap();
+        // maxw grows to the 10-char header total "   1,234" -> rows right-align to it.
+        assert!(text.contains("     1,234  1 dir"), "{text}");
+        assert!(text.contains("     1,000  \u{F024B} d/"), "{text}");
+        assert!(text.contains("         1  \u{F0214} f.bin"), "{text}");
+        // Footer stays byte-based (top-level file: 640 KiB).
+        assert!(text.ends_with("1 file (640.0 Kb)\n"), "{text}");
+    }
+
+    #[test]
+    fn test_follow_links_single_row() {
+        // -L: the walker descended and counted the symlinked dir; the renderer
+        // shows it as a single dir row with its real aggregate size.
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        std::fs::create_dir(root.join("realdir")).unwrap();
+        std::fs::write(root.join("realdir/inner.bin"), vec![0u8; 2 * MIB as usize]).unwrap();
+        std::os::unix::fs::symlink("realdir", root.join("linkdir")).unwrap();
+        let mut opts = test_opts(0, true);
+        opts.follow_links = true;
+
+        let mut root_node = node(root.to_str().unwrap(), FileType::Dir, 2 * MIB, 0, 0);
+        let mut linkdir = node(
+            root.join("linkdir").to_str().unwrap(),
+            FileType::Symlink,
+            2 * MIB,
+            2 * MIB,
+            1,
+        );
+        linkdir.children.push(node(
+            root.join("linkdir/inner.bin").to_str().unwrap(),
+            FileType::File,
+            2 * MIB,
+            2 * MIB,
+            2,
+        ));
+        root_node.children.push(linkdir);
+
+        let mut out: Vec<u8> = Vec::new();
+        render_one(&root_node, &opts, &mut out).unwrap();
+        let text = String::from_utf8(out).unwrap();
+        // maxw 10 (header "       2Mb"); row column right-aligns "       2".
+        assert!(text.contains("           2  \u{F024B} linkdir/"), "{text}");
+        // depth 0 -> files only at depth 1, so no inner.bin row; single row.
+        assert_eq!(text.matches("linkdir").count(), 1, "{text}");
+        assert!(!text.contains("inner.bin"), "{text}");
+        assert!(!text.contains("\u{F0337}"), "no link row with -L: {text}");
+    }
+
+    #[test]
     fn test_maxw_growth_and_header() {
         // A 6-digit MiB value (999999) grows the column to 6+... all formatted
         // values are 8 chars, so maxw stays 8 for rows; the header total (10
@@ -824,11 +992,7 @@ mod tests {
             2 * MIB,
             1,
         ));
-        let opts = TreeOpts {
-            display_depth: 0,
-            sort: SortMode::Size,
-            colors: false,
-        };
+        let opts = test_opts(0, true);
         let mut out: Vec<u8> = Vec::new();
         render_one(&root_node, &opts, &mut out).unwrap();
         let text = String::from_utf8(out).unwrap();
@@ -845,11 +1009,7 @@ mod tests {
     fn test_empty_path_layout() {
         let tmp = tempfile::tempdir().unwrap();
         let root_node = node(tmp.path().to_str().unwrap(), FileType::Dir, 0, 0, 0);
-        let opts = TreeOpts {
-            display_depth: 0,
-            sort: SortMode::Size,
-            colors: false,
-        };
+        let opts = test_opts(0, true);
         let mut out: Vec<u8> = Vec::new();
         render_one(&root_node, &opts, &mut out).unwrap();
         let text = String::from_utf8(out).unwrap();

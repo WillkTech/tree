@@ -2,12 +2,12 @@
 using namespace System.Management.Automation
 using namespace System.Management.Automation.Language
 
-Register-ArgumentCompleter -Native -CommandName 'dust' -ScriptBlock {
+Register-ArgumentCompleter -Native -CommandName 'tree' -ScriptBlock {
     param($wordToComplete, $commandAst, $cursorPosition)
 
     $commandElements = $commandAst.CommandElements
     $command = @(
-        'dust'
+        'tree'
         for ($i = 1; $i -lt $commandElements.Count; $i++) {
             $element = $commandElements[$i]
             if ($element -isnot [StringConstantExpressionAst] -or
@@ -20,7 +20,7 @@ Register-ArgumentCompleter -Native -CommandName 'dust' -ScriptBlock {
     }) -join ';'
 
     $completions = @(switch ($command) {
-        'dust' {
+        'tree' {
             [CompletionResult]::new('-d', '-d', [CompletionResultType]::ParameterName, 'Depth to show')
             [CompletionResult]::new('--depth', '--depth', [CompletionResultType]::ParameterName, 'Depth to show')
             [CompletionResult]::new('-T', '-T ', [CompletionResultType]::ParameterName, 'Number of threads to use')
@@ -55,8 +55,8 @@ Register-ArgumentCompleter -Native -CommandName 'dust' -ScriptBlock {
             [CompletionResult]::new('--collapse', '--collapse', [CompletionResultType]::ParameterName, 'Keep these directories collapsed')
             [CompletionResult]::new('-m', '-m', [CompletionResultType]::ParameterName, 'Directory ''size'' is max filetime of child files instead of disk size. while a/c/m for last accessed/changed/modified time')
             [CompletionResult]::new('--filetime', '--filetime', [CompletionResultType]::ParameterName, 'Directory ''size'' is max filetime of child files instead of disk size. while a/c/m for last accessed/changed/modified time')
-            [CompletionResult]::new('--style', '--style', [CompletionResultType]::ParameterName, 'Output style. tree reproduces the legacy tree.zsh layout byte-for-byte')
-            [CompletionResult]::new('--sort', '--sort', [CompletionResultType]::ParameterName, 'Sort mode for --style tree: size (dirs first, size desc, name asc) or name. Ignored by the dust style')
+            [CompletionResult]::new('--style', '--style', [CompletionResultType]::ParameterName, 'Output style. tree (default) reproduces the legacy tree.zsh layout; dust keeps the upstream percent-bar output')
+            [CompletionResult]::new('--sort', '--sort', [CompletionResultType]::ParameterName, 'Sort mode for the tree style: size (dirs first, size desc, name asc) or name. Ignored by the dust style')
             [CompletionResult]::new('-p', '-p', [CompletionResultType]::ParameterName, 'Subdirectories will not have their path shortened')
             [CompletionResult]::new('--full-paths', '--full-paths', [CompletionResultType]::ParameterName, 'Subdirectories will not have their path shortened')
             [CompletionResult]::new('-L', '-L ', [CompletionResultType]::ParameterName, 'dereference sym links - Treat sym links as directories and go into them')
@@ -94,6 +94,7 @@ Register-ArgumentCompleter -Native -CommandName 'dust' -ScriptBlock {
             [CompletionResult]::new('--only-file', '--only-file', [CompletionResultType]::ParameterName, 'Only files will be displayed. (Finds your largest files)')
             [CompletionResult]::new('-j', '-j', [CompletionResultType]::ParameterName, 'Output the directory tree as json to the current directory')
             [CompletionResult]::new('--output-json', '--output-json', [CompletionResultType]::ParameterName, 'Output the directory tree as json to the current directory')
+            [CompletionResult]::new('--f', '--f', [CompletionResultType]::ParameterName, 'Show files too (tree style lists folders only by default). Directories up to the display depth, files and symlinks one level deeper')
             [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help (see more with ''--help'')')
             [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help (see more with ''--help'')')
             [CompletionResult]::new('-V', '-V ', [CompletionResultType]::ParameterName, 'Print version')

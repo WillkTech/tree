@@ -7,7 +7,7 @@ use clap::{Parser, ValueEnum, ValueHint};
 
 /// Like du but more intuitive
 #[derive(Debug, Parser)]
-#[command(name("Dust"), version)]
+#[command(name("tree"), version)]
 pub struct Cli {
     /// Depth to show
     #[arg(short, long)]
@@ -192,14 +192,20 @@ pub struct Cli {
     #[arg(short('m'), long, value_enum)]
     pub filetime: Option<FileTime>,
 
-    /// Output style. tree reproduces the legacy tree.zsh layout byte-for-byte.
-    #[arg(long, value_enum, default_value = "dust")]
+    /// Output style. tree (default) reproduces the legacy tree.zsh layout;
+    /// dust keeps the upstream percent-bar output.
+    #[arg(long, value_enum, default_value = "tree")]
     pub style: OutputStyle,
 
-    /// Sort mode for --style tree: size (dirs first, size desc, name asc) or
-    /// name. Ignored by the dust style.
+    /// Sort mode for the tree style: size (dirs first, size desc, name asc)
+    /// or name. Ignored by the dust style.
     #[arg(long, value_enum, default_value = "size")]
     pub sort: SortMode,
+
+    /// Show files too (tree style lists folders only by default). Directories
+    /// up to the display depth, files and symlinks one level deeper.
+    #[arg(long("f"), alias("files"))]
+    pub show_files: bool,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ValueEnum)]

@@ -16,7 +16,7 @@ fn corpora_root() -> String {
 }
 
 fn bench_tree(c: &mut Criterion) {
-    let bin = env!("CARGO_BIN_EXE_dust");
+    let bin = env!("CARGO_BIN_EXE_tree");
     let root = corpora_root();
 
     for (label, depth) in [("medium", "2"), ("large", "2"), ("large", "3")] {

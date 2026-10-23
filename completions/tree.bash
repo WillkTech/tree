@@ -1,4 +1,4 @@
-_dust() {
+_tree() {
     local i cur prev opts cmd
     COMPREPLY=()
     if [[ "${BASH_VERSINFO[0]}" -ge 4 ]]; then
@@ -14,7 +14,7 @@ _dust() {
     do
         case "${cmd},${i}" in
             ",$1")
-                cmd="dust"
+                cmd="tree"
                 ;;
             *)
                 ;;
@@ -22,8 +22,8 @@ _dust() {
     done
 
     case "${cmd}" in
-        dust)
-            opts="-d -T -n -p -X -I -L -x -s -r -c -C -b -B -z -R -f -i -v -e -t -w -P -D -F -o -S -j -M -A -y -m -h -V --depth --threads --config --number-of-lines --full-paths --ignore-directory --ignore-all-in-file --dereference-links --limit-filesystem --apparent-size --reverse --no-colors --force-colors --dim --no-percent-bars --bars-on-right --min-size --screen-reader --skip-total --filecount --ignore-hidden --invert-filter --filter --file-types --terminal-width --no-progress --print-errors --only-dir --only-file --output-format --stack-size --output-json --mtime --atime --ctime --files0-from --files-from --collapse --filetime --style --sort --help --version"
+        tree)
+            opts="-d -T -n -p -X -I -L -x -s -r -c -C -b -B -z -R -f -i -v -e -t -w -P -D -F -o -S -j -M -A -y -m -h -V --depth --threads --config --number-of-lines --full-paths --ignore-directory --ignore-all-in-file --dereference-links --limit-filesystem --apparent-size --reverse --no-colors --force-colors --dim --no-percent-bars --bars-on-right --min-size --screen-reader --skip-total --filecount --ignore-hidden --invert-filter --filter --file-types --terminal-width --no-progress --print-errors --only-dir --only-file --output-format --stack-size --output-json --mtime --atime --ctime --files0-from --files-from --collapse --filetime --style --sort --f --help --version"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 1 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -217,7 +217,7 @@ _dust() {
 }
 
 if [[ "${BASH_VERSINFO[0]}" -eq 4 && "${BASH_VERSINFO[1]}" -ge 4 || "${BASH_VERSINFO[0]}" -gt 4 ]]; then
-    complete -F _dust -o nosort -o bashdefault -o default dust
+    complete -F _tree -o nosort -o bashdefault -o default tree
 else
-    complete -F _dust -o bashdefault -o default dust
+    complete -F _tree -o bashdefault -o default tree
 fi

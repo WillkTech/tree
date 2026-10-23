@@ -24,7 +24,7 @@ TREE_ZSH=${TREE_ZSH:-$root/tree.zsh}
 # deep corpus needs headroom under macOS PATH_MAX.
 CORP=${CORP:-/tmp/treecorp}
 GOLDEN=$root/tests/golden
-BIN=${BIN:-$root/target/release/dust}
+BIN=${BIN:-$root/target/release/tree}
 
 corpora=(tiny medium deep symlinks unicode hardlinks perms empty)
 if [[ -d $CORP/large ]] && (( ${INCLUDE_LARGE:-0} )); then
@@ -46,7 +46,9 @@ run_legacy() { # <corpus-dir> <depth> <sort>
 }
 
 run_rust() { # <corpus-dir> <depth> <sort>
-    "$BIN" --style tree --sort "$3" --depth "$2" --force-colors "$1"
+    # --f: the legacy script always listed files; the binary's default is
+    # folders-only, so the golden contract runs with --f.
+    "$BIN" --sort "$3" --depth "$2" --f --force-colors "$1"
 }
 
 case $mode in

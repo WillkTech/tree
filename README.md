@@ -143,21 +143,28 @@ Usage: dust --dim Displays dimmer bars
 
 ```
 
-## Tree style (`--style tree`)
+## tree (the default style)
 
-This fork adds a `tree` output style that reproduces the legacy
-`tree.zsh` shell script (gdu + zsh globbing + zstat, ~1.6 s for 10k files)
-in a single process, byte-for-byte, in tens of milliseconds:
+This fork's binary is `tree`. It reproduces the legacy `tree.zsh` shell
+script (gdu + zsh globbing + zstat, ~1.6 s for 10k files) in a single
+process, byte-for-byte, in tens of milliseconds — and it speaks the script's
+arg shape natively, no shell wrapper:
 
 ```
-ztree --style tree [--sort size|name] [--depth N] [PATH] [--force-colors]
+tree [depth] [PATH] [--sort size|name] [--f] [-f] [-L] [--force-colors]
 ```
 
-(`ztree` is the muscle-memory name; the installed binary is `dust` — add a
-symlink or alias, or invoke `dust --style tree` directly.)
-
-- `--depth N` is the script's display depth: directories up to N, files and
-  symlinks up to N+1 (N=0 shows the top level only).
+- Default output is **folders only** with their sizes; `tree 1` shows the
+  first level of folders, `tree 2` levels 1–2, and so on (default depth 0 =
+  the top level).
+- `--f` also lists files: folders up to the display depth, files and
+  symlinks one level deeper (the script's original behavior, pinned by the
+  golden tests).
+- `-f` (dust's filecount) shows how many files each folder contains instead
+  of bytes.
+- `-L` dereferences symlinks: symlinked folders are traversed and counted
+  toward totals. Without it they are like Windows shortcuts — not counted,
+  and only listed with `--f`.
 - `--sort size` (default): dirs first, then size descending, name ascending
   on ties. `--sort name`: per-component name ascending; dirs sort before
   files on identical basenames (the script sorts the full `key\t<index>`
@@ -174,11 +181,11 @@ symlink or alias, or invoke `dust --style tree` directly.)
   `zstat` treats them as options).
 - Colors follow `NO_COLOR`/TTY detection (`--force-colors` to force); the
   legacy script colored unconditionally.
-- Everything else (default dust output, JSON, TUI) is unchanged.
+- The upstream dust percent-bar output is still available via
+  `--style dust`.
 
-The zsh wrapper lives at [zsh/tree.zsh](zsh/tree.zsh); the old implementation
-is kept as `tree_legacy()` for one release. Golden tests:
-`scripts/make_corpus.sh` + `scripts/golden.sh` (macOS only — APFS sizes).
+Golden tests: `scripts/make_corpus.sh` + `scripts/golden.sh` (macOS only —
+APFS sizes). The `--f` mode is what the goldens pin.
 
 ## Config file
 

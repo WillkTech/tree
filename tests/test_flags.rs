@@ -11,7 +11,8 @@ use std::str;
  */
 
 fn build_command<T: AsRef<OsStr>>(command_args: Vec<T>) -> String {
-    let mut cmd = cargo_bin_cmd!("dust");
+    let mut cmd = cargo_bin_cmd!("tree");
+    cmd.arg("--style").arg("dust");
 
     // Hide progress bar
     cmd.arg("-P");
@@ -29,7 +30,8 @@ fn test_filetime_output_uses_unix_timestamp() {
     let temp_dir = tempfile::tempdir().unwrap();
     std::fs::write(temp_dir.path().join("recent.txt"), b"recent").unwrap();
 
-    let mut cmd = cargo_bin_cmd!("dust");
+    let mut cmd = cargo_bin_cmd!("tree");
+    cmd.arg("--style").arg("dust");
     let output = cmd
         .arg("-P")
         .arg("-c")
@@ -60,7 +62,8 @@ fn test_mtime_filter_uses_unix_timestamp() {
     file.set_times(FileTimes::new().set_modified(yesterday_noon.into()))
         .unwrap();
 
-    let mut cmd = cargo_bin_cmd!("dust");
+    let mut cmd = cargo_bin_cmd!("tree");
+    cmd.arg("--style").arg("dust");
     let output = cmd
         .arg("-P")
         .arg("-c")
@@ -180,7 +183,8 @@ pub fn test_files0_from_flag_file() {
 
 #[test]
 pub fn test_files_from_flag_stdin() {
-    let mut cmd = cargo_bin_cmd!("dust");
+    let mut cmd = cargo_bin_cmd!("tree");
+    cmd.arg("--style").arg("dust");
     cmd.arg("-P").arg("--files-from").arg("-");
     let input = b"tests/test_dir_files_from/a_file\ntests/test_dir_files_from/hello_file\n";
     cmd.write_stdin(input.as_ref());
@@ -194,7 +198,8 @@ pub fn test_files_from_flag_stdin() {
 
 #[test]
 pub fn test_files_from_ignores_empty_lines() {
-    let mut cmd = cargo_bin_cmd!("dust");
+    let mut cmd = cargo_bin_cmd!("tree");
+    cmd.arg("--style").arg("dust");
     cmd.arg("-P").arg("--files-from").arg("-");
     let input = b"tests/test_dir_files_from/a_file\n\ntests/test_dir_files_from/hello_file\n";
     cmd.write_stdin(input.as_ref());
@@ -223,7 +228,8 @@ pub fn test_cli_paths_ignore_empty_arguments() {
 
 #[test]
 pub fn test_files0_from_flag_stdin() {
-    let mut cmd = cargo_bin_cmd!("dust");
+    let mut cmd = cargo_bin_cmd!("tree");
+    cmd.arg("--style").arg("dust");
     cmd.arg("-P").arg("--files0-from").arg("-");
     let input = b"tests/test_dir_files_from/a_file\0tests/test_dir_files_from/hello_file\0";
     cmd.write_stdin(input.as_ref());
@@ -237,7 +243,8 @@ pub fn test_files0_from_flag_stdin() {
 
 #[test]
 pub fn test_with_bad_param() {
-    let mut cmd = cargo_bin_cmd!("dust");
+    let mut cmd = cargo_bin_cmd!("tree");
+    cmd.arg("--style").arg("dust");
     cmd.arg("-P").arg("bad_place");
     let output_error = cmd.unwrap_err();
     let result = output_error.as_output().unwrap();

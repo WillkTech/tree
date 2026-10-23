@@ -9,7 +9,7 @@ include!("src/cli.rs");
 
 fn main() -> Result<(), Error> {
     let outdir = "completions";
-    let app_name = "dust";
+    let app_name = "tree";
     let mut cmd = Cli::command();
 
     generate_to(Bash, &mut cmd, app_name, outdir)?;
@@ -18,7 +18,7 @@ fn main() -> Result<(), Error> {
     generate_to(PowerShell, &mut cmd, app_name, outdir)?;
     generate_to(Elvish, &mut cmd, app_name, outdir)?;
 
-    let file = Path::new("man-page").join("dust.1");
+    let file = Path::new("man-page").join("tree.1");
     std::fs::create_dir_all("man-page")?;
     let mut file = File::create(file)?;
 
