@@ -28,12 +28,12 @@ complete -c tree -l collapse -d 'Keep these directories collapsed' -r -F
 complete -c tree -s m -l filetime -d 'Directory \'size\' is max filetime of child files instead of disk size. while a/c/m for last accessed/changed/modified time' -r -f -a "a\t'last accessed time'
 c\t'last changed time'
 m\t'last modified time'"
-complete -c tree -l style -d 'Output style. tree (default) reproduces the legacy tree.zsh layout; dust keeps the upstream percent-bar output' -r -f -a "dust\t'Default dust output (percent bars)'
-tree\t'tree.zsh-compatible output'"
+complete -c tree -l style -d 'Output style. tree (default) reproduces the legacy tree.zsh layout; dust keeps the upstream percent-bar output' -r -f -a "dust\t'Upstream dust output (percent bars)'
+tree\t'tree.zsh-compatible output (folders only by default)'"
 complete -c tree -l sort -d 'Sort mode for the tree style: size (dirs first, size desc, name asc) or name. Ignored by the dust style' -r -f -a "size\t'Dirs first, then size descending, name ascending on ties'
-name\t'Per-component name ascending; files before dirs on identical basenames'"
+name\t'Per-component name ascending; dirs before files on identical basenames'"
 complete -c tree -s p -l full-paths -d 'Subdirectories will not have their path shortened'
-complete -c tree -s L -l dereference-links -d 'dereference sym links - Treat sym links as directories and go into them'
+complete -c tree -s L -l dereference-links -d 'dereference sym links - Treat sym links as directories and go into them (in tree mode their contents also count toward totals)'
 complete -c tree -s x -l limit-filesystem -d 'Only count the files and directories on the same filesystem as the supplied directory'
 complete -c tree -s s -l apparent-size -d 'Use file length instead of blocks'
 complete -c tree -s r -l reverse -d 'Print tree upside down (biggest highest)'
@@ -52,6 +52,6 @@ complete -c tree -l print-errors -d 'Print path with errors'
 complete -c tree -s D -l only-dir -d 'Only directories will be displayed'
 complete -c tree -s F -l only-file -d 'Only files will be displayed. (Finds your largest files)'
 complete -c tree -s j -l output-json -d 'Output the directory tree as json to the current directory'
-complete -c tree -l f -d 'Show files too (tree style lists folders only by default). Directories up to the display depth, files and symlinks one level deeper'
+complete -c tree -l f -l files -d 'Show files too (tree style lists folders only by default). Directories up to the display depth, files and symlinks one level deeper'
 complete -c tree -s h -l help -d 'Print help (see more with \'--help\')'
 complete -c tree -s V -l version -d 'Print version'

@@ -1,7 +1,7 @@
-// Scan+render benchmarks for --style tree (plan §8.4).
+// Scan+render benchmarks for tree mode (the default; folders only).
 //
-// dust is a bin-only crate, so these spawn the binary end-to-end (process
-// spawn adds ~1-3 ms). The §2 targets are end-to-end too: 10k files <= 60 ms,
+// This is a bin-only crate, so these spawn the binary end-to-end (process
+// spawn adds ~1-3 ms). The targets are end-to-end too: 10k files <= 60 ms,
 // 100k files <= 200 ms. Corpora come from scripts/make_corpus.sh; the scan
 // (rayon walk) dominates at 100k files, the Rust render pass is noise.
 //

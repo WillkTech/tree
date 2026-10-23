@@ -2,8 +2,8 @@
 
 # ----------- Pre release ---------
 # Compare times of runs to check no drastic slow down:
-#  hyperfine 'target/release/dust /home/andy'
-#  hyperfine 'dust /home/andy'
+#  hyperfine 'target/release/tree /home/andy'
+#  hyperfine 'tree /home/andy'
 
 # ----------- Release ---------
 # inc version in cargo.toml

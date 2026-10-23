@@ -1,7 +1,9 @@
-// Tree style renderer: byte-for-byte port of ~/.config/zsh/functions/tree.zsh
-// (plan.md §4). Consumes the Node tree produced by the rayon walk and emits
-// the script's exact layout: flat rows, composite sort keys, reverse sibling
-// pass, header/footer. All quirks the script has are preserved as-is (D3/D5).
+// Tree style renderer: byte-for-byte port of the legacy tree.zsh kept at the
+// repo root (the golden-test contract). Consumes the Node tree produced by
+// the rayon walk and emits the script's exact layout: flat rows, composite
+// sort keys, reverse sibling pass, header/footer. All quirks the script has
+// are preserved as-is (D3/D5). Folders-only is the default; --f restores the
+// script's full file listing.
 
 use std::io::Write;
 

@@ -1,4 +1,9 @@
 # ============================================================================
+# LEGACY REFERENCE IMPLEMENTATION — superseded by the Rust binary `tree`.
+# Kept in the repository as the golden-test contract: scripts/golden.sh
+# captures this script's output and diffs the binary against it (with --f).
+# ============================================================================
+# ============================================================================
 # Fast directory tree with recursive sizes (Strict Vertically-Aligned GB)
 #
 # Requires:

@@ -1,16 +1,16 @@
 [package]
 name = "du-dust"
-description = "A more intuitive version of du"
+description = "A fast, folders-first directory tree with sizes (dust fork)"
 version = "1.2.6"
 authors = ["bootandy <bootandy@gmail.com>", "nebkor <code@ardent.nebcorp.com>"]
 edition = "2024"
 readme = "README.md"
 
-documentation = "https://github.com/bootandy/dust"
-homepage = "https://github.com/bootandy/dust"
-repository = "https://github.com/bootandy/dust"
+documentation = "https://github.com/willktech/tree"
+homepage = "https://github.com/willktech/tree"
+repository = "https://github.com/willktech/tree"
 
-keywords = ["du", "command-line", "disk", "disk-usage"]
+keywords = ["du", "command-line", "disk", "disk-usage", "tree"]
 categories = ["command-line-utilities"]
 license = "Apache-2.0"
 
@@ -103,7 +103,7 @@ assets = [
   ],
 ]
 extended-description = """\
-Dust is meant to give you an instant overview of which directories are using
-disk space without requiring sort or head. Dust will print a maximum of one
-'Did not have permissions message'.
+tree gives you an instant overview of which folders are using disk space.
+Folders are listed by default; --f also lists files. It is a fork of dust:
+the upstream percent-bar output remains available with --style dust.
 """

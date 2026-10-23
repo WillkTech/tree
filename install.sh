@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# dust installer script
-# Usage: curl -sSfL https://raw.githubusercontent.com/bootandy/dust/main/install.sh | sh
+# tree installer script
+# Usage: curl -sSfL https://raw.githubusercontent.com/willktech/tree/master/install.sh | sh
 
 set -e
 
-REPO="bootandy/dust"
-BINARY_NAME="dust"
+REPO="willktech/tree"
+BINARY_NAME="tree"
 
 # Colors for output
 RED='\033[0;31m'
@@ -87,9 +87,7 @@ get_target() {
         if [ "$ARCH" = "x86_64" ]; then
             TARGET="x86_64-apple-darwin"
         elif [ "$ARCH" = "aarch64" ]; then
-            # For Apple Silicon, use x86_64 with Rosetta if native build not available
-            TARGET="x86_64-apple-darwin"
-            warn "Using x86_64 binary (will run via Rosetta 2 on Apple Silicon)"
+            TARGET="aarch64-apple-darwin"
         else
             error "Unsupported macOS architecture: $ARCH"
         fi
@@ -112,10 +110,10 @@ get_target() {
 download_and_install() {
     # Construct download URL
     if [ "$OS" = "windows" ]; then
-        ARCHIVE_NAME="dust-v${VERSION}-${TARGET}.zip"
+        ARCHIVE_NAME="tree-v${VERSION}-${TARGET}.zip"
         ARCHIVE_EXT="zip"
     else
-        ARCHIVE_NAME="dust-v${VERSION}-${TARGET}.tar.gz"
+        ARCHIVE_NAME="tree-v${VERSION}-${TARGET}.tar.gz"
         ARCHIVE_EXT="tar.gz"
     fi
     
@@ -154,8 +152,8 @@ download_and_install() {
     fi
     
     # Determine installation directory
-    if [ -n "$DUST_INSTALL" ]; then
-        INSTALL_DIR="$DUST_INSTALL"
+    if [ -n "$TREE_INSTALL" ]; then
+        INSTALL_DIR="$TREE_INSTALL"
     elif [ -w "/usr/local/bin" ]; then
         INSTALL_DIR="/usr/local/bin"
     elif [ -w "$HOME/.local/bin" ]; then
@@ -183,7 +181,7 @@ download_and_install() {
     cd - > /dev/null
     rm -rf "$TMP_DIR"
     
-    info "${GREEN}✓${NC} dust v$VERSION installed successfully!"
+    info "${GREEN}✓${NC} tree v$VERSION installed successfully!"
     
     # Check if install directory is in PATH
     case ":$PATH:" in
@@ -207,7 +205,7 @@ download_and_install() {
 
 # Main execution
 main() {
-    info "dust installer"
+    info "tree installer"
     echo ""
     
     # Check for required tools
@@ -222,12 +220,12 @@ main() {
     download_and_install
     
     echo ""
-    info "Installation complete! Try running: ${GREEN}dust${NC}"
+    info "Installation complete! Try running: ${GREEN}tree${NC}"
 }
 
 # Allow version to be specified via environment variable
-if [ -n "$DUST_VERSION" ]; then
-    VERSION="$DUST_VERSION"
+if [ -n "$TREE_VERSION" ]; then
+    VERSION="$TREE_VERSION"
 fi
 
 main

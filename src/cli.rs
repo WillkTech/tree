@@ -5,9 +5,23 @@ use clap::{Parser, ValueEnum, ValueHint};
 // For single thread mode set this variable on your command line:
 // export RAYON_NUM_THREADS=1
 
-/// Like du but more intuitive
+/// A fast, folders-first directory tree with sizes (dust fork)
 #[derive(Debug, Parser)]
-#[command(name("tree"), version)]
+#[command(
+    name("tree"),
+    version,
+    after_help = "Tree mode (default):
+  tree [DEPTH] [PATH] [--sort size|name] [--f] [-f] [-L]
+
+  The first all-digit positional is the display depth (default 0, the top
+  level); the first non-digit positional is the path. Folders are listed by
+  default; --f also lists files, one level deeper than folders.
+
+Dust mode:
+  tree --style dust [PATH]...
+
+  Upstream dust percent-bar output; all dust flags apply."
+)]
 pub struct Cli {
     /// Depth to show
     #[arg(short, long)]
@@ -40,6 +54,7 @@ pub struct Cli {
     pub ignore_all_in_file: Option<String>,
 
     /// dereference sym links - Treat sym links as directories and go into them
+    /// (in tree mode their contents also count toward totals)
     #[arg(short('L'), long)]
     pub dereference_links: bool,
 
@@ -204,17 +219,17 @@ pub struct Cli {
 
     /// Show files too (tree style lists folders only by default). Directories
     /// up to the display depth, files and symlinks one level deeper.
-    #[arg(long("f"), alias("files"))]
+    #[arg(long("f"), visible_alias("files"))]
     pub show_files: bool,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ValueEnum)]
 #[value(rename_all = "lower")]
 pub enum OutputStyle {
-    /// Default dust output (percent bars)
+    /// Upstream dust output (percent bars)
     Dust,
 
-    /// tree.zsh-compatible output
+    /// tree.zsh-compatible output (folders only by default)
     Tree,
 }
 
@@ -224,7 +239,7 @@ pub enum SortMode {
     /// Dirs first, then size descending, name ascending on ties
     Size,
 
-    /// Per-component name ascending; files before dirs on identical basenames
+    /// Per-component name ascending; dirs before files on identical basenames
     Name,
 }
 

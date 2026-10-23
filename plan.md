@@ -1,6 +1,19 @@
 # Implementation Plan: `tree.zsh` → Rust (dust fork)
 
-**Project:** Replace the hot path of `~/.config/zsh/functions/tree.zsh` with a single Rust binary built from the fork https://github.com/WillkTech/dust (clean fork of `bootandy/dust` master @ `ae5c770`, branched 2026-10-23). The binary keeps dust's parallel scan engine and adds a new `--style tree` output mode that reproduces the zsh script's output **byte-for-byte**.
+> **Implementation status (2026-10-24): shipped as option B.** The binary is
+> named `tree` (not `dust`), the tree style is the default, and the zsh
+> wrapper was removed. Folders are listed by default; `--f` restores the
+> legacy script's full listing (directories ≤ N, files/links ≤ N+1), `-f` is
+> dust's filecount, `-L` dereferences symlinks, and `--style dust` keeps the
+> upstream percent-bar output. The 72 goldens run the binary with `--f`.
+> Sections below that describe an additive `--style tree` behind an unchanged
+> dust default (§2 goals, §5–§7) are historical; see [README.md](README.md)
+> for the shipped behavior. Two plan details were corrected by the goldens:
+> symlink rows carry the link's own lstat size (the script's `zstat -L -A`
+> does not actually follow links), and files whose relative path starts with
+> `-` are dropped and excluded from the footer sum.
+
+**Project:** Replace the hot path of `~/.config/zsh/functions/tree.zsh` with a single Rust binary built from the fork https://github.com/willktech/tree (clean fork of `bootandy/dust` master @ `ae5c770`, branched 2026-10-23). The binary keeps dust's parallel scan engine and adds a new `--style tree` output mode that reproduces the zsh script's output **byte-for-byte**.
 
 **Toolchain on target machine:** rustc/cargo 1.99.1 (rustup), zsh 5.9 (arm64-apple-darwin26.0), gdu-go v5.38.0 (Homebrew), Apple M5 Max (18 cores).
 
@@ -312,7 +325,7 @@ Total: **~3–4 focused days.**
 
 ```bash
 # Clone the fork (operator adjusts location as needed)
-git clone https://github.com/WillkTech/dust.git ~/projects/dust
+git clone https://github.com/willktech/tree.git ~/projects/tree
 cd ~/projects/dust && cargo build --release          # baseline build check
 
 # Capture a legacy golden (note the zmodload — see §1)
@@ -320,7 +333,7 @@ zsh -f -c 'zmodload zsh/stat; cd "$1"; source ~/.config/zsh/functions/tree.zsh; 
   -- "$CORPUS/medium" > tests/golden/medium.3.size.expected
 
 # New binary, same shot
-./target/release/dust --style tree --sort size --depth 3 --force-colors "$CORPUS/medium" \
+./target/release/tree --sort size --depth 3 --f --force-colors "$CORPUS/medium" \
   > /tmp/actual && diff tests/golden/medium.3.size.expected /tmp/actual
 
 # Full suites

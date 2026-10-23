@@ -1,219 +1,223 @@
-[![Build Status](https://github.com/bootandy/dust/actions/workflows/CICD.yml/badge.svg?branch=master)](https://github.com/bootandy/dust/actions)
+[![Build Status](https://github.com/willktech/tree/actions/workflows/CICD.yml/badge.svg?branch=master)](https://github.com/willktech/tree/actions)
 
+# tree
 
-# Dust
+A fast, folders-first directory tree with sizes.
 
-du + rust = dust. Like du but more intuitive.
+`tree` is a Rust fork of [dust](https://github.com/bootandy/dust). It keeps
+dust's parallel scanner and reproduces the output of a legacy `tree.zsh`
+script (gdu + zsh globbing + zstat) in a single process — byte-for-byte, and
+roughly 30× faster. The binary is named `tree` and speaks the script's
+argument shape directly; no shell wrapper is involved.
 
-# Why
+## Highlights
 
-Because I want an easy way to see where my disk is being used.
-
-# Demo
-
-<p>
-  <img src="media/demo.gif" alt="dust demo — interactive disk usage analysis" width="600">
-</p>
-
-
-Study the above demo
-
-* We cd into a webapp it is 72K in size.
-
-* We see 32K in the `src` folder. Note the bar jumps to 44%. Half of the webapp is in src
-
-* We see 8K in the `src/utils`. The bar jumps down to 11% but a shadow stays at 44% showing that it is part of the `src` folder
-
-* We then demo the -d 2 flag - Show a depth of 2 folders
-
-* We demo the -n 5 flag - Show only 5 items (by default we show terminal height items)
-
+- **Folders only by default**, with recursive sizes: `tree 1` shows the first
+  level of folders, `tree 2` levels 1–2, and so on.
+- **`--f` adds files**: `tree 1 --f` lists level-1 folders plus files at the
+  base level and one level deeper (the legacy script's behavior).
+- **Byte-identical** to the legacy script on all golden corpora (72 tests,
+  both sort modes, depths 0–3).
+- **One binary**: the upstream dust percent-bar output is still available via
+  `--style dust`, with every dust flag intact.
+- Same scan engine as dust: rayon parallelism, hardlink deduplication,
+  filesystem limits, ignore/filter rules, mtime filters.
 
 ## Install
 
-### Quick Install (Linux, macOS, Windows) 
+From a checkout of this repository:
+
 ```bash
-curl -sSfL https://raw.githubusercontent.com/bootandy/dust/refs/heads/master/install.sh | sh
+cargo install --path . --force --root ~/.local
 ```
 
-### Cargo <a href="https://repology.org/project/du-dust/versions"><img src="https://repology.org/badge/vertical-allrepos/du-dust.svg" alt="Packaging status" align="right"></a>
+That installs `~/.local/bin/tree`; make sure `~/.local/bin` is on your
+`PATH`. Or build and copy manually:
 
-#### Cargo
+```bash
+cargo build --release
+install -m 755 target/release/tree ~/.local/bin/tree
+```
 
-- `cargo install du-dust`
-
-#### 🍺 Homebrew (Mac OS)
-
-- `brew install dust`
-
-#### 🍺 Homebrew (Linux)
-
-- `brew install dust`
-
-#### DNF (Fedora Linux)
-
-- `sudo dnf install du-dust`
-
-#### [Snap](https://ubuntu.com/core/services/guide/snaps-intro) Ubuntu and [supported systems](https://snapcraft.io/docs/installing-snapd)
-
-- `snap install dust`
-
-Note: `dust` installed through `snap` can only access files stored in the `/home` directory. See danie-dejager/dust-snap#2 for more information.
-
-#### [mise](https://github.com/jdx/mise)
-
-- `mise use -g dust`
-
-#### [Pacstall](https://github.com/pacstall/pacstall) (Debian/Ubuntu)
-
-- `pacstall -I dust-bin`
-
-#### Anaconda (conda-forge)
-
-- `conda install -c conda-forge dust`
-
-#### [deb-get](https://github.com/wimpysworld/deb-get) (Debian/Ubuntu)
-
-- `deb-get install du-dust`
-
-#### [x-cmd](https://www.x-cmd.com/pkg/#VPContent)
-
-- `x env use dust`
-
-#### Windows:
-
-- `scoop install dust`
-- Windows GNU version - works
-- Windows MSVC - requires: [VCRUNTIME140.dll](https://docs.microsoft.com/en-gb/cpp/windows/latest-supported-vc-redist?view=msvc-170)
-
-#### Download
-
-- Download Linux/Mac binary from [Releases](https://github.com/bootandy/dust/releases)
-- unzip file: `tar -xvf _downloaded_file.tar.gz`
-- move file to executable path: `sudo mv dust /usr/local/bin/`
-
-## Overview
-
-Dust is meant to give you an instant overview of which directories are using disk space without requiring sort or head. Dust will print a maximum of one 'Did not have permissions message'.
-
-Dust will list a slightly-less-than-the-terminal-height number of the biggest subdirectories or files and will smartly recurse down the tree to find the larger ones. There is no need for a '-d' flag or a '-h' flag. The largest subdirectories will be colored.
-
-The different colors on the bars: These represent the combined tree hierarchy & disk usage. The shades of grey are used to indicate which parent folder a subfolder belongs to. For instance, look at the above screenshot. `.steam` is a folder taking 44% of the space. From the `.steam` bar is a light grey line that goes up. All these folders are inside `.steam` so if you delete `.steam` all that stuff will be gone too.
-
-If you are new to the tool I recommend to try tweaking the `-n` parameter. `dust -n 10`, `dust -n 50`.
+> If you previously used a zsh function named `tree`, remove it (or its
+> `source` line): a shell function shadows the binary on `PATH`.
 
 ## Usage
 
 ```
-Usage: dust
-Usage: dust <dir>
-Usage: dust <dir>  <another_dir> <and_more>
-Usage: dust -p (full-path - Show fullpath of the subdirectories)
-Usage: dust -s (apparent-size - shows the length of the file as opposed to the amount of disk space it uses)
-Usage: dust -n 30  (Shows 30 directories instead of the default [default is terminal height])
-Usage: dust -d 3  (Shows 3 levels of subdirectories)
-Usage: dust -D (Show only directories (eg dust -D))
-Usage: dust -F (Show only files - finds your largest files)
-Usage: dust -r (reverse order of output)
-Usage: dust -o si/b/kb/kib/mb/mib/gb/gib (si - prints sizes in powers of 1000. Others print size in that format).
-Usage: dust -X ignore  (ignore all files and directories with the name 'ignore')
-Usage: dust -x (Only show directories on the same filesystem)
-Usage: dust -b (Do not show percentages or draw ASCII bars)
-Usage: dust -B (--bars-on-right - Percent bars moved to right side of screen)
-Usage: dust -i (Do not show hidden files)
-Usage: dust -c (No colors [monochrome])
-Usage: dust -C (Force colors)
-Usage: dust --dim (Dim the percent bars to reduce brightness on dark terminals)
-Usage: dust -f (Count files instead of diskspace [Counts by inode, to include duplicate inodes use dust -f -s])
-Usage: dust -t (Group by filetype)
-Usage: dust -z 10M (min-size, Only include files larger than 10M)
-Usage: dust -e regex (Only include files matching this regex (eg dust -e "\.png$" would match png files))
-Usage: dust -v regex (Exclude files matching this regex (eg dust -v "\.png$" would ignore png files))
-Usage: dust -L (dereference-links - Treat sym links as directories and go into them)
-Usage: dust -P (Disable the progress indicator)
-Usage: dust -T (Set the number of walker threads. Default is the CPU count. For high-latency storage like NFS or remote mounts, a higher count can speed up the walk by overlapping more concurrent stat calls.)
-Usage: dust -R (For screen readers. Removes bars/symbols. Adds new column: depth level. (May want to use -p for full path too))
-Usage: dust --skip-total (No total row will be displayed)
-Usage: dust -z 40000/30MB/20kib (Exclude output files/directories below size 40000 bytes / 30MB / 20KiB)
-Usage: dust -j (Prints JSON representation of directories, try: dust -j  | jq)
-Usage: dust --files0-from=FILE (Read NUL-terminated file paths from FILE; if FILE is '-', read from stdin)
-Usage: dust --files-from=FILE (Read newline-terminated file paths from FILE; if FILE is '-', read from stdin)
-Usage: dust --collapse=node-modules will keep the node-modules folder collapsed in display instead of recursively opening it
-Usage: dust --dim Displays dimmer bars
+tree [DEPTH] [PATH] [--sort size|name] [--f] [-f] [-L] [--style dust]
+```
+
+`DEPTH` is the first all-digit positional argument; the first non-digit
+positional is the path (default `.`). This is the legacy script's arg shape,
+so `tree 2 ~/src` works as expected. The default depth is `0` — the top level.
+`-d N` / `--depth N` is equivalent and works in both styles.
+
+| Command | Output |
+|---|---|
+| `tree` | top-level folders only |
+| `tree 1` | first level of folders |
+| `tree 2` | folders levels 1–2 |
+| `tree 1 --f` | folders ≤ 1, plus files ≤ 2 (base level and inside level-1 folders) |
+| `tree -f` | folders with file counts instead of bytes |
+| `tree -L` | dereference symlinks: traverse and count them |
+| `tree --sort name` | per-component name order |
+| `tree --style dust` | upstream dust percent-bar output |
+
+Example — `tree 1 --f`:
 
 ```
 
-## tree (the default style)
+        13Mb  2 dirs
+  ----------  ------
+           9  󰉋 src/
+           4  ├── 󰈔 main.rs
+           2  └── 󰈔 lib.rs
+           1  󰉋 docs/
+           1  └── 󰈔 README.md
+           2  󰈔 notes.txt
+           1  󰈔 Cargo.toml
 
-This fork's binary is `tree`. It reproduces the legacy `tree.zsh` shell
-script (gdu + zsh globbing + zstat, ~1.6 s for 10k files) in a single
-process, byte-for-byte, in tens of milliseconds — and it speaks the script's
-arg shape natively, no shell wrapper:
+2 files (3.0 Mb)
+```
+
+The header shows the total size and the number of top-level folders; the
+footer shows the number of top-level files and their combined size. Folder
+sizes are disk usage (allocated blocks); file sizes are apparent size. Values
+below 1 MiB render blank in the size column (legacy behavior).
+
+### Depth and files
+
+Folders are shown up to the display depth. With `--f`, files and symlinks are
+shown one level deeper — the legacy script's rule: directories ≤ N, files and
+symlinks ≤ N+1. Thus `tree 1 --f` shows level-1 folders and the files at the
+base level *and* inside those folders.
+
+### Folders, files, and links
+
+- `--f` (alias `--files`) lists files and symlinks. Without it, only real
+  folders are listed.
+- `-f` / `--filecount` (dust's flag) switches the size column to the number of
+  files each folder contains; the header total becomes the total count.
+- `-L` / `--dereference-links` traverses symlinked folders and counts their
+  contents toward totals. Without `-L`, symlinked folders are like Windows
+  shortcuts: they contribute 0 to totals and are only listed with `--f`.
+- `-s` / `--apparent-size` uses file lengths instead of allocated blocks for
+  folder totals.
+
+### Sorting
+
+- `--sort size` (default): folders first, then size descending, name ascending
+  on ties.
+- `--sort name`: per-component name ascending. Folders sort before files on
+  identical basenames.
+- Names compare in byte order (the legacy script's `LC_ALL=C` behavior).
+
+### Other tree-mode details
+
+- Files whose relative path starts with `-` are dropped (a `zstat` quirk in the
+  legacy script) and excluded from the footer sum.
+- With `--f`, a symlinked folder at display depth renders twice: as a folder
+  row and as a link row, matching the script.
+- Colors follow `NO_COLOR`/TTY detection. `-C`/`--force-colors` forces them and
+  `-c`/`--no-colors` disables them; the legacy script always colored.
+- Walker options apply in tree mode too: `-x`, `-i`, `-X`, `-I`, `-e`, `-v`,
+  `-M`, `-A`, `-y`, `-T`, `--files0-from`, `--files-from`.
+- Display-only dust flags (`-n`, `-r`, `-p`, `-b`, `-B`, `-R`, `-D`, `-F`,
+  `-t`, `-z`, `-o`, `-j`, `-m`, `-w`, `--collapse`, `--skip-total`) are
+  ignored in tree mode. Use `--style dust` for those.
+
+## The dust style
+
+`tree --style dust ...` keeps the upstream dust output unchanged: percent
+bars, terminal-height limiting, JSON, and every upstream flag. Run
+`tree --help` for the full list.
 
 ```
-tree [depth] [PATH] [--sort size|name] [--f] [-f] [-L] [--force-colors]
+tree --style dust
+tree --style dust <dir>
+tree --style dust -d 2
+tree --style dust -n 30
+tree --style dust -D          # directories only
+tree --style dust -F          # files only
+tree --style dust -b          # no percent bars
+tree --style dust -j | jq     # JSON
 ```
 
-- Default output is **folders only** with their sizes; `tree 1` shows the
-  first level of folders, `tree 2` levels 1–2, and so on (default depth 0 =
-  the top level).
-- `--f` also lists files: folders up to the display depth, files and
-  symlinks one level deeper (the script's original behavior, pinned by the
-  golden tests).
-- `-f` (dust's filecount) shows how many files each folder contains instead
-  of bytes.
-- `-L` dereferences symlinks: symlinked folders are traversed and counted
-  toward totals. Without it they are like Windows shortcuts — not counted,
-  and only listed with `--f`.
-- `--sort size` (default): dirs first, then size descending, name ascending
-  on ties. `--sort name`: per-component name ascending; dirs sort before
-  files on identical basenames (the script sorts the full `key\t<index>`
-  string and the dir's trailing separator byte sorts before the tab). Names
-  compare in byte order (the script's behavior under `LC_ALL=C`; under a
-  UTF-8 locale zsh's `(o)` sort collates punctuation differently).
-- Directory sizes are disk usage (blocks); file sizes are apparent size;
-  symlink rows show the symlink's own size (the script's `zstat -L -A`
-  quirk does not actually follow links, so link rows are always blank).
-  Symlinked directories are not descended into for size purposes (like gdu)
-  but their contents appear as rows (like the script's glob pass), and a
-  symlinked dir at display depth renders twice: as a dir row and as a link
-  row. Files whose relative path starts with `-` are dropped (the script's
-  `zstat` treats them as options).
-- Colors follow `NO_COLOR`/TTY detection (`--force-colors` to force); the
-  legacy script colored unconditionally.
-- The upstream dust percent-bar output is still available via
-  `--style dust`.
-
-Golden tests: `scripts/make_corpus.sh` + `scripts/golden.sh` (macOS only —
-APFS sizes). The `--f` mode is what the goldens pin.
+<p>
+  <img src="media/demo.gif" alt="dust demo — percent-bar output" width="600">
+</p>
 
 ## Config file
 
-Dust has a config file where the above options can be set.
-Either: `$XDG_CONFIG_HOME/dust/config.toml` (falling back to
-`~/.config/dust/config.toml`) or `~/.dust.toml`
+The config file is unchanged from dust and is still read from
+`$XDG_CONFIG_HOME/dust/config.toml` (falling back to
+`~/.config/dust/config.toml`) or `~/.dust.toml`:
+
 ```
 $ cat ~/.config/dust/config.toml
 reverse=true
 limit-filesystem=true
 ```
-Keys use the long flag name in kebab-case. See [config/config.toml](config/config.toml) for a fuller sample.
 
-## Alternatives
+Keys use the long flag name in kebab-case. See
+[config/config.toml](config/config.toml) for a fuller sample.
 
-- [NCDU](https://dev.yorhel.nl/ncdu)
-- [dutree](https://github.com/nachoparker/dutree)
-- [dua](https://github.com/Byron/dua-cli/)
-- [pdu](https://github.com/KSXGitHub/parallel-disk-usage)
-- [dirstat-rs](https://github.com/scullionw/dirstat-rs)
-- `du -d 1 -h | sort -h`
+Config keys apply where the equivalent flag applies: walker/color/depth keys
+affect tree mode, display-only keys affect `--style dust`. `--style`, `--sort`,
+`--f`, and the positional depth are command-line only.
 
-## Why to use Dust over the Alternatives
+## Performance
 
-Dust simply Does The Right Thing when handling lots of small files & directories. Dust keeps the output simple by only showing large entries.
+Measured on an Apple M5 Max (18 cores), macOS/APFS, end-to-end (scan +
+aggregate + sort + render):
 
-Tools like ncdu & baobab, give you a view of directory sizes but you have no idea where the largest files are. For example directory A could have a size larger than directory B, but in fact the largest file is in B and not A. Finding this out via these other tools is not trivial whereas Dust will show the large file clearly in the tree hierarchy 
+- Legacy `tree.zsh`: **~1.65 s** for a 10k-file corpus.
+- `tree`: **~60 ms** for the 14.2k-file medium corpus, **~430 ms** for the
+  ~100k-file large corpus.
 
-Dust will not count hard links multiple times (unless you want to `-s`).
+The scan dominates the medium corpus; on the ~100k-file corpus the render pass
+is the larger share (~110 ms scan, ~300 ms render).
 
-Typing `dust -n 90` will show you your 90 largest entries. `-n` is not quite like `head -n` or `tail -n`, dust is intelligent and chooses the largest entries
+## Golden tests
+
+The 72 goldens in [tests/golden](tests/golden) are the legacy script's output
+(9 corpora × 4 depths × 2 sorts). They are generated on macOS/APFS only
+(filesystem allocation differs elsewhere).
+
+```bash
+./scripts/make_corpus.sh /tmp/treecorp   # deterministic corpora
+./scripts/golden.sh check                # diff the binary against goldens
+./scripts/golden.sh capture              # regenerate from tree.zsh
+./scripts/golden.sh stable               # check golden determinism
+```
+
+The harness runs the binary with `--f` — the legacy script always listed
+files, so `--f` is the golden contract. The large (100k-file) corpus is
+skipped by default (64 goldens); `INCLUDE_LARGE=1` includes it (all 72,
+slow). [tree.zsh](tree.zsh) is kept in the repo as the reference
+implementation the goldens are captured from.
+
+## Development
+
+```bash
+cargo test                     # unit + integration tests
+cargo bench                    # scan+render benchmarks (needs corpora)
+cargo fmt --all -- --check
+cargo clippy --locked -- -D warnings
+```
+
+## Differences from the legacy script
+
+- Colors are TTY/`NO_COLOR`-gated instead of unconditional.
+- Permission-denied folders are reported on stderr (the script skipped them
+  silently); stdout is unchanged.
+- Hardlink deduplication is deterministic (inode order).
+- The autoload `zmodload zsh/stat` landmine is gone — there is no zsh left.
+
+## Upstream and license
+
+This is a fork of [bootandy/dust](https://github.com/bootandy/dust); the scan
+engine, dust-style renderer, and most flags come from upstream. The `tree`
+style and the folders-only default are this fork's additions. Licensed under
+Apache-2.0; see [LICENSE](LICENSE).

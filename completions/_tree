@@ -71,14 +71,14 @@ m\:"last modified time"))' \
 '--filetime=[Directory '\''size'\'' is max filetime of child files instead of disk size. while a/c/m for last accessed/changed/modified time]:FILETIME:((a\:"last accessed time"
 c\:"last changed time"
 m\:"last modified time"))' \
-'--style=[Output style. tree (default) reproduces the legacy tree.zsh layout; dust keeps the upstream percent-bar output]:STYLE:((dust\:"Default dust output (percent bars)"
-tree\:"tree.zsh-compatible output"))' \
+'--style=[Output style. tree (default) reproduces the legacy tree.zsh layout; dust keeps the upstream percent-bar output]:STYLE:((dust\:"Upstream dust output (percent bars)"
+tree\:"tree.zsh-compatible output (folders only by default)"))' \
 '--sort=[Sort mode for the tree style\: size (dirs first, size desc, name asc) or name. Ignored by the dust style]:SORT:((size\:"Dirs first, then size descending, name ascending on ties"
-name\:"Per-component name ascending; files before dirs on identical basenames"))' \
+name\:"Per-component name ascending; dirs before files on identical basenames"))' \
 '-p[Subdirectories will not have their path shortened]' \
 '--full-paths[Subdirectories will not have their path shortened]' \
-'-L[dereference sym links - Treat sym links as directories and go into them]' \
-'--dereference-links[dereference sym links - Treat sym links as directories and go into them]' \
+'-L[dereference sym links - Treat sym links as directories and go into them (in tree mode their contents also count toward totals)]' \
+'--dereference-links[dereference sym links - Treat sym links as directories and go into them (in tree mode their contents also count toward totals)]' \
 '-x[Only count the files and directories on the same filesystem as the supplied directory]' \
 '--limit-filesystem[Only count the files and directories on the same filesystem as the supplied directory]' \
 '-s[Use file length instead of blocks]' \
@@ -113,6 +113,7 @@ name\:"Per-component name ascending; files before dirs on identical basenames"))
 '-j[Output the directory tree as json to the current directory]' \
 '--output-json[Output the directory tree as json to the current directory]' \
 '--f[Show files too (tree style lists folders only by default). Directories up to the display depth, files and symlinks one level deeper]' \
+'--files[Show files too (tree style lists folders only by default). Directories up to the display depth, files and symlinks one level deeper]' \
 '-h[Print help (see more with '\''--help'\'')]' \
 '--help[Print help (see more with '\''--help'\'')]' \
 '-V[Print version]' \

@@ -1,7 +1,12 @@
-# Sample Config file, works with toml and yaml
-# Place in either:
-#   ~/.config/dust/config.toml
+# Sample config file (TOML or YAML), read by the `tree` binary.
+# The paths are kept at dust's locations for compatibility:
+#   $XDG_CONFIG_HOME/dust/config.toml  (default ~/.config/dust/config.toml)
 #   ~/.dust.toml
+#
+# Keys use the long flag name in kebab-case. Walker/color/depth keys apply to
+# both output styles; display-only keys (bars, reverse, skip-total, ...) apply
+# to `--style dust` only. `--style`, `--sort`, `--f`, and the positional depth
+# are command-line only.
 
 # Print tree upside down (biggest highest)
 reverse=true

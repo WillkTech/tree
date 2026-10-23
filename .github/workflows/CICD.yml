@@ -3,9 +3,9 @@ name: CICD
 # spell-checker:ignore CICD MSVC MacOS SHAs buildable gnueabihf musl popd pushd softprops toolchain riscv
 
 env:
-  PROJECT_NAME: dust
-  PROJECT_DESC: "du + rust = dust"
-  PROJECT_AUTH: "bootandy"
+  PROJECT_NAME: tree
+  PROJECT_DESC: "A fast, folders-first directory tree with sizes (dust fork)"
+  PROJECT_AUTH: "willktech"
 
 on: [push, pull_request, workflow_dispatch]
 
