@@ -55,6 +55,8 @@ Register-ArgumentCompleter -Native -CommandName 'dust' -ScriptBlock {
             [CompletionResult]::new('--collapse', '--collapse', [CompletionResultType]::ParameterName, 'Keep these directories collapsed')
             [CompletionResult]::new('-m', '-m', [CompletionResultType]::ParameterName, 'Directory ''size'' is max filetime of child files instead of disk size. while a/c/m for last accessed/changed/modified time')
             [CompletionResult]::new('--filetime', '--filetime', [CompletionResultType]::ParameterName, 'Directory ''size'' is max filetime of child files instead of disk size. while a/c/m for last accessed/changed/modified time')
+            [CompletionResult]::new('--style', '--style', [CompletionResultType]::ParameterName, 'Output style. tree reproduces the legacy tree.zsh layout byte-for-byte')
+            [CompletionResult]::new('--sort', '--sort', [CompletionResultType]::ParameterName, 'Sort mode for --style tree: size (dirs first, size desc, name asc) or name. Ignored by the dust style')
             [CompletionResult]::new('-p', '-p', [CompletionResultType]::ParameterName, 'Subdirectories will not have their path shortened')
             [CompletionResult]::new('--full-paths', '--full-paths', [CompletionResultType]::ParameterName, 'Subdirectories will not have their path shortened')
             [CompletionResult]::new('-L', '-L ', [CompletionResultType]::ParameterName, 'dereference sym links - Treat sym links as directories and go into them')

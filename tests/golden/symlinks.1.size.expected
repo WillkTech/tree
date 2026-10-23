@@ -1,0 +1,580 @@
+
+       248Mb  3 dirs
+  ----------  ------
+         200  [1;34m󰉋 targets/[0m
+           2  [2m├── [0m󰈔 t005.bin
+           2  [2m├── [0m󰈔 t038.bin
+           2  [2m├── [0m󰈔 t071.bin
+           2  [2m├── [0m󰈔 t104.bin
+           2  [2m├── [0m󰈔 t137.bin
+           2  [2m├── [0m󰈔 t170.bin
+           2  [2m├── [0m󰈔 t010.bin
+           2  [2m├── [0m󰈔 t043.bin
+           2  [2m├── [0m󰈔 t076.bin
+           2  [2m├── [0m󰈔 t109.bin
+           2  [2m├── [0m󰈔 t142.bin
+           2  [2m├── [0m󰈔 t175.bin
+           2  [2m├── [0m󰈔 t015.bin
+           2  [2m├── [0m󰈔 t048.bin
+           2  [2m├── [0m󰈔 t081.bin
+           2  [2m├── [0m󰈔 t114.bin
+           2  [2m├── [0m󰈔 t147.bin
+           2  [2m├── [0m󰈔 t180.bin
+           2  [2m├── [0m󰈔 t020.bin
+           2  [2m├── [0m󰈔 t053.bin
+           2  [2m├── [0m󰈔 t086.bin
+           2  [2m├── [0m󰈔 t119.bin
+           2  [2m├── [0m󰈔 t152.bin
+           2  [2m├── [0m󰈔 t185.bin
+           2  [2m├── [0m󰈔 t025.bin
+           2  [2m├── [0m󰈔 t058.bin
+           2  [2m├── [0m󰈔 t091.bin
+           2  [2m├── [0m󰈔 t124.bin
+           2  [2m├── [0m󰈔 t157.bin
+           2  [2m├── [0m󰈔 t190.bin
+           2  [2m├── [0m󰈔 t030.bin
+           2  [2m├── [0m󰈔 t063.bin
+           2  [2m├── [0m󰈔 t096.bin
+           2  [2m├── [0m󰈔 t129.bin
+           2  [2m├── [0m󰈔 t162.bin
+           2  [2m├── [0m󰈔 t195.bin
+           2  [2m├── [0m󰈔 t002.bin
+           2  [2m├── [0m󰈔 t035.bin
+           2  [2m├── [0m󰈔 t068.bin
+           2  [2m├── [0m󰈔 t101.bin
+           2  [2m├── [0m󰈔 t134.bin
+           2  [2m├── [0m󰈔 t167.bin
+           2  [2m├── [0m󰈔 t200.bin
+           2  [2m├── [0m󰈔 t007.bin
+           2  [2m├── [0m󰈔 t040.bin
+           2  [2m├── [0m󰈔 t073.bin
+           2  [2m├── [0m󰈔 t106.bin
+           2  [2m├── [0m󰈔 t139.bin
+           2  [2m├── [0m󰈔 t172.bin
+           2  [2m├── [0m󰈔 t012.bin
+           2  [2m├── [0m󰈔 t045.bin
+           2  [2m├── [0m󰈔 t078.bin
+           2  [2m├── [0m󰈔 t111.bin
+           2  [2m├── [0m󰈔 t144.bin
+           2  [2m├── [0m󰈔 t177.bin
+           1  [2m├── [0m󰈔 t017.bin
+           1  [2m├── [0m󰈔 t050.bin
+           1  [2m├── [0m󰈔 t083.bin
+           1  [2m├── [0m󰈔 t116.bin
+           1  [2m├── [0m󰈔 t149.bin
+           1  [2m├── [0m󰈔 t182.bin
+           1  [2m├── [0m󰈔 t022.bin
+           1  [2m├── [0m󰈔 t055.bin
+           1  [2m├── [0m󰈔 t088.bin
+           1  [2m├── [0m󰈔 t121.bin
+           1  [2m├── [0m󰈔 t154.bin
+           1  [2m├── [0m󰈔 t187.bin
+           1  [2m├── [0m󰈔 t027.bin
+           1  [2m├── [0m󰈔 t060.bin
+           1  [2m├── [0m󰈔 t093.bin
+           1  [2m├── [0m󰈔 t126.bin
+           1  [2m├── [0m󰈔 t159.bin
+           1  [2m├── [0m󰈔 t192.bin
+           1  [2m├── [0m󰈔 t032.bin
+           1  [2m├── [0m󰈔 t065.bin
+           1  [2m├── [0m󰈔 t098.bin
+           1  [2m├── [0m󰈔 t131.bin
+           1  [2m├── [0m󰈔 t164.bin
+           1  [2m├── [0m󰈔 t197.bin
+           1  [2m├── [0m󰈔 t004.bin
+           1  [2m├── [0m󰈔 t037.bin
+           1  [2m├── [0m󰈔 t070.bin
+           1  [2m├── [0m󰈔 t103.bin
+           1  [2m├── [0m󰈔 t136.bin
+           1  [2m├── [0m󰈔 t169.bin
+           1  [2m├── [0m󰈔 t009.bin
+           1  [2m├── [0m󰈔 t042.bin
+           1  [2m├── [0m󰈔 t075.bin
+           1  [2m├── [0m󰈔 t108.bin
+           1  [2m├── [0m󰈔 t141.bin
+           1  [2m├── [0m󰈔 t174.bin
+           1  [2m├── [0m󰈔 t014.bin
+           1  [2m├── [0m󰈔 t047.bin
+           1  [2m├── [0m󰈔 t080.bin
+           1  [2m├── [0m󰈔 t113.bin
+           1  [2m├── [0m󰈔 t146.bin
+           1  [2m├── [0m󰈔 t179.bin
+           1  [2m├── [0m󰈔 t019.bin
+           1  [2m├── [0m󰈔 t052.bin
+           1  [2m├── [0m󰈔 t085.bin
+           1  [2m├── [0m󰈔 t118.bin
+           1  [2m├── [0m󰈔 t151.bin
+           1  [2m├── [0m󰈔 t184.bin
+              [2m├── [0m󰈔 t024.bin
+              [2m├── [0m󰈔 t057.bin
+              [2m├── [0m󰈔 t090.bin
+              [2m├── [0m󰈔 t123.bin
+              [2m├── [0m󰈔 t156.bin
+              [2m├── [0m󰈔 t189.bin
+              [2m├── [0m󰈔 t029.bin
+              [2m├── [0m󰈔 t062.bin
+              [2m├── [0m󰈔 t095.bin
+              [2m├── [0m󰈔 t128.bin
+              [2m├── [0m󰈔 t161.bin
+              [2m├── [0m󰈔 t194.bin
+              [2m├── [0m󰈔 t001.bin
+              [2m├── [0m󰈔 t034.bin
+              [2m├── [0m󰈔 t067.bin
+              [2m├── [0m󰈔 t100.bin
+              [2m├── [0m󰈔 t133.bin
+              [2m├── [0m󰈔 t166.bin
+              [2m├── [0m󰈔 t199.bin
+              [2m├── [0m󰈔 t006.bin
+              [2m├── [0m󰈔 t039.bin
+              [2m├── [0m󰈔 t072.bin
+              [2m├── [0m󰈔 t105.bin
+              [2m├── [0m󰈔 t138.bin
+              [2m├── [0m󰈔 t171.bin
+              [2m├── [0m󰈔 t011.bin
+              [2m├── [0m󰈔 t044.bin
+              [2m├── [0m󰈔 t077.bin
+              [2m├── [0m󰈔 t110.bin
+              [2m├── [0m󰈔 t143.bin
+              [2m├── [0m󰈔 t176.bin
+              [2m├── [0m󰈔 t016.bin
+              [2m├── [0m󰈔 t049.bin
+              [2m├── [0m󰈔 t082.bin
+              [2m├── [0m󰈔 t115.bin
+              [2m├── [0m󰈔 t148.bin
+              [2m├── [0m󰈔 t181.bin
+              [2m├── [0m󰈔 t021.bin
+              [2m├── [0m󰈔 t054.bin
+              [2m├── [0m󰈔 t087.bin
+              [2m├── [0m󰈔 t120.bin
+              [2m├── [0m󰈔 t153.bin
+              [2m├── [0m󰈔 t186.bin
+              [2m├── [0m󰈔 t026.bin
+              [2m├── [0m󰈔 t059.bin
+              [2m├── [0m󰈔 t092.bin
+              [2m├── [0m󰈔 t125.bin
+              [2m├── [0m󰈔 t158.bin
+              [2m├── [0m󰈔 t191.bin
+              [2m├── [0m󰈔 t031.bin
+              [2m├── [0m󰈔 t064.bin
+              [2m├── [0m󰈔 t097.bin
+              [2m├── [0m󰈔 t130.bin
+              [2m├── [0m󰈔 t163.bin
+              [2m├── [0m󰈔 t196.bin
+              [2m├── [0m󰈔 t003.bin
+              [2m├── [0m󰈔 t036.bin
+              [2m├── [0m󰈔 t069.bin
+              [2m├── [0m󰈔 t102.bin
+              [2m├── [0m󰈔 t135.bin
+              [2m├── [0m󰈔 t168.bin
+              [2m├── [0m󰈔 t008.bin
+              [2m├── [0m󰈔 t041.bin
+              [2m├── [0m󰈔 t074.bin
+              [2m├── [0m󰈔 t107.bin
+              [2m├── [0m󰈔 t140.bin
+              [2m├── [0m󰈔 t173.bin
+              [2m├── [0m󰈔 t013.bin
+              [2m├── [0m󰈔 t046.bin
+              [2m├── [0m󰈔 t079.bin
+              [2m├── [0m󰈔 t112.bin
+              [2m├── [0m󰈔 t145.bin
+              [2m├── [0m󰈔 t178.bin
+              [2m├── [0m󰈔 t018.bin
+              [2m├── [0m󰈔 t051.bin
+              [2m├── [0m󰈔 t084.bin
+              [2m├── [0m󰈔 t117.bin
+              [2m├── [0m󰈔 t150.bin
+              [2m├── [0m󰈔 t183.bin
+              [2m├── [0m󰈔 t023.bin
+              [2m├── [0m󰈔 t056.bin
+              [2m├── [0m󰈔 t089.bin
+              [2m├── [0m󰈔 t122.bin
+              [2m├── [0m󰈔 t155.bin
+              [2m├── [0m󰈔 t188.bin
+              [2m├── [0m󰈔 t028.bin
+              [2m├── [0m󰈔 t061.bin
+              [2m├── [0m󰈔 t094.bin
+              [2m├── [0m󰈔 t127.bin
+              [2m├── [0m󰈔 t160.bin
+              [2m├── [0m󰈔 t193.bin
+              [2m├── [0m󰈔 t033.bin
+              [2m├── [0m󰈔 t066.bin
+              [2m├── [0m󰈔 t099.bin
+              [2m├── [0m󰈔 t132.bin
+              [2m├── [0m󰈔 t165.bin
+              [2m└── [0m󰈔 t198.bin
+          47  [1;34m󰉋 dirs/[0m
+           1  [1;34m󰉋 realdir/[0m
+           1  [2m├── [0m󰈔 afile.bin
+              [2m└── [0m󰌷 nested_link
+              [1;34m󰉋 link_to_dir_01/[0m
+              [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_02/[0m
+           1  [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_03/[0m
+           2  [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_04/[0m
+              [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_05/[0m
+              [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_06/[0m
+           1  [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_07/[0m
+           2  [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_08/[0m
+              [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_09/[0m
+              [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_10/[0m
+           2  [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_11/[0m
+              [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_12/[0m
+              [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_13/[0m
+           1  [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_14/[0m
+           2  [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_15/[0m
+              [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_16/[0m
+              [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_17/[0m
+           1  [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_18/[0m
+           2  [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_19/[0m
+              [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_20/[0m
+              [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_21/[0m
+           2  [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_22/[0m
+              [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_23/[0m
+              [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_24/[0m
+           1  [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_25/[0m
+           2  [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_26/[0m
+              [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_27/[0m
+              [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_28/[0m
+           1  [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_29/[0m
+           2  [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_30/[0m
+              [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_31/[0m
+              [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_32/[0m
+           2  [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_33/[0m
+              [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_34/[0m
+              [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_35/[0m
+           1  [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_36/[0m
+           2  [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_37/[0m
+              [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_38/[0m
+              [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_39/[0m
+           1  [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_40/[0m
+           2  [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_41/[0m
+              [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_42/[0m
+              [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_43/[0m
+           2  [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_44/[0m
+              [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_45/[0m
+              [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_46/[0m
+           1  [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_47/[0m
+           2  [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_48/[0m
+              [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_49/[0m
+              [2m└── [0m󰈔 inner.bin
+              [1;34m󰉋 link_to_dir_50/[0m
+           1  [2m└── [0m󰈔 inner.bin
+              󰌷 link_to_file_001
+              󰌷 link_to_file_002
+              󰌷 link_to_file_003
+              󰌷 link_to_file_004
+              󰌷 link_to_file_005
+              󰌷 link_to_file_006
+              󰌷 link_to_file_007
+              󰌷 link_to_file_008
+              󰌷 link_to_file_009
+              󰌷 link_to_file_010
+              󰌷 link_to_file_011
+              󰌷 link_to_file_012
+              󰌷 link_to_file_013
+              󰌷 link_to_file_014
+              󰌷 link_to_file_015
+              󰌷 link_to_file_016
+              󰌷 link_to_file_017
+              󰌷 link_to_file_018
+              󰌷 link_to_file_019
+              󰌷 link_to_file_020
+              󰌷 link_to_file_021
+              󰌷 link_to_file_022
+              󰌷 link_to_file_023
+              󰌷 link_to_file_024
+              󰌷 link_to_file_025
+              󰌷 link_to_file_026
+              󰌷 link_to_file_027
+              󰌷 link_to_file_028
+              󰌷 link_to_file_029
+              󰌷 link_to_file_030
+              󰌷 link_to_file_031
+              󰌷 link_to_file_032
+              󰌷 link_to_file_033
+              󰌷 link_to_file_034
+              󰌷 link_to_file_035
+              󰌷 link_to_file_036
+              󰌷 link_to_file_037
+              󰌷 link_to_file_038
+              󰌷 link_to_file_039
+              󰌷 link_to_file_040
+              󰌷 link_to_file_041
+              󰌷 link_to_file_042
+              󰌷 link_to_file_043
+              󰌷 link_to_file_044
+              󰌷 link_to_file_045
+              󰌷 link_to_file_046
+              󰌷 link_to_file_047
+              󰌷 link_to_file_048
+              󰌷 link_to_file_049
+              󰌷 link_to_file_050
+              󰌷 link_to_file_051
+              󰌷 link_to_file_052
+              󰌷 link_to_file_053
+              󰌷 link_to_file_054
+              󰌷 link_to_file_055
+              󰌷 link_to_file_056
+              󰌷 link_to_file_057
+              󰌷 link_to_file_058
+              󰌷 link_to_file_059
+              󰌷 link_to_file_060
+              󰌷 link_to_file_061
+              󰌷 link_to_file_062
+              󰌷 link_to_file_063
+              󰌷 link_to_file_064
+              󰌷 link_to_file_065
+              󰌷 link_to_file_066
+              󰌷 link_to_file_067
+              󰌷 link_to_file_068
+              󰌷 link_to_file_069
+              󰌷 link_to_file_070
+              󰌷 link_to_file_071
+              󰌷 link_to_file_072
+              󰌷 link_to_file_073
+              󰌷 link_to_file_074
+              󰌷 link_to_file_075
+              󰌷 link_to_file_076
+              󰌷 link_to_file_077
+              󰌷 link_to_file_078
+              󰌷 link_to_file_079
+              󰌷 link_to_file_080
+              󰌷 link_to_file_081
+              󰌷 link_to_file_082
+              󰌷 link_to_file_083
+              󰌷 link_to_file_084
+              󰌷 link_to_file_085
+              󰌷 link_to_file_086
+              󰌷 link_to_file_087
+              󰌷 link_to_file_088
+              󰌷 link_to_file_089
+              󰌷 link_to_file_090
+              󰌷 link_to_file_091
+              󰌷 link_to_file_092
+              󰌷 link_to_file_093
+              󰌷 link_to_file_094
+              󰌷 link_to_file_095
+              󰌷 link_to_file_096
+              󰌷 link_to_file_097
+              󰌷 link_to_file_098
+              󰌷 link_to_file_099
+              󰌷 link_to_file_100
+              󰌷 link_to_file_101
+              󰌷 link_to_file_102
+              󰌷 link_to_file_103
+              󰌷 link_to_file_104
+              󰌷 link_to_file_105
+              󰌷 link_to_file_106
+              󰌷 link_to_file_107
+              󰌷 link_to_file_108
+              󰌷 link_to_file_109
+              󰌷 link_to_file_110
+              󰌷 link_to_file_111
+              󰌷 link_to_file_112
+              󰌷 link_to_file_113
+              󰌷 link_to_file_114
+              󰌷 link_to_file_115
+              󰌷 link_to_file_116
+              󰌷 link_to_file_117
+              󰌷 link_to_file_118
+              󰌷 link_to_file_119
+              󰌷 link_to_file_120
+              󰌷 link_to_file_121
+              󰌷 link_to_file_122
+              󰌷 link_to_file_123
+              󰌷 link_to_file_124
+              󰌷 link_to_file_125
+              󰌷 link_to_file_126
+              󰌷 link_to_file_127
+              󰌷 link_to_file_128
+              󰌷 link_to_file_129
+              󰌷 link_to_file_130
+              󰌷 link_to_file_131
+              󰌷 link_to_file_132
+              󰌷 link_to_file_133
+              󰌷 link_to_file_134
+              󰌷 link_to_file_135
+              󰌷 link_to_file_136
+              󰌷 link_to_file_137
+              󰌷 link_to_file_138
+              󰌷 link_to_file_139
+              󰌷 link_to_file_140
+              󰌷 link_to_file_141
+              󰌷 link_to_file_142
+              󰌷 link_to_file_143
+              󰌷 link_to_file_144
+              󰌷 link_to_file_145
+              󰌷 link_to_file_146
+              󰌷 link_to_file_147
+              󰌷 link_to_file_148
+              󰌷 link_to_file_149
+              󰌷 link_to_file_150
+              󰌷 link_to_file_151
+              󰌷 link_to_file_152
+              󰌷 link_to_file_153
+              󰌷 link_to_file_154
+              󰌷 link_to_file_155
+              󰌷 link_to_file_156
+              󰌷 link_to_file_157
+              󰌷 link_to_file_158
+              󰌷 link_to_file_159
+              󰌷 link_to_file_160
+              󰌷 link_to_file_161
+              󰌷 link_to_file_162
+              󰌷 link_to_file_163
+              󰌷 link_to_file_164
+              󰌷 link_to_file_165
+              󰌷 link_to_file_166
+              󰌷 link_to_file_167
+              󰌷 link_to_file_168
+              󰌷 link_to_file_169
+              󰌷 link_to_file_170
+              󰌷 link_to_file_171
+              󰌷 link_to_file_172
+              󰌷 link_to_file_173
+              󰌷 link_to_file_174
+              󰌷 link_to_file_175
+              󰌷 link_to_file_176
+              󰌷 link_to_file_177
+              󰌷 link_to_file_178
+              󰌷 link_to_file_179
+              󰌷 link_to_file_180
+              󰌷 link_to_file_181
+              󰌷 link_to_file_182
+              󰌷 link_to_file_183
+              󰌷 link_to_file_184
+              󰌷 link_to_file_185
+              󰌷 link_to_file_186
+              󰌷 link_to_file_187
+              󰌷 link_to_file_188
+              󰌷 link_to_file_189
+              󰌷 link_to_file_190
+              󰌷 link_to_file_191
+              󰌷 link_to_file_192
+              󰌷 link_to_file_193
+              󰌷 link_to_file_194
+              󰌷 link_to_file_195
+              󰌷 link_to_file_196
+              󰌷 link_to_file_197
+              󰌷 link_to_file_198
+              󰌷 link_to_file_199
+              󰌷 link_to_file_200
+              󰌷 dangling_10
+              󰌷 dangling_11
+              󰌷 dangling_12
+              󰌷 dangling_13
+              󰌷 dangling_14
+              󰌷 dangling_15
+              󰌷 dangling_16
+              󰌷 dangling_17
+              󰌷 dangling_18
+              󰌷 dangling_19
+              󰌷 dangling_20
+              󰌷 dangling_01
+              󰌷 dangling_02
+              󰌷 dangling_03
+              󰌷 dangling_04
+              󰌷 dangling_05
+              󰌷 dangling_06
+              󰌷 dangling_07
+              󰌷 dangling_08
+              󰌷 dangling_09
+              󰌷 link_to_dir_01
+              󰌷 link_to_dir_02
+              󰌷 link_to_dir_03
+              󰌷 link_to_dir_04
+              󰌷 link_to_dir_05
+              󰌷 link_to_dir_06
+              󰌷 link_to_dir_07
+              󰌷 link_to_dir_08
+              󰌷 link_to_dir_09
+              󰌷 link_to_dir_10
+              󰌷 link_to_dir_11
+              󰌷 link_to_dir_12
+              󰌷 link_to_dir_13
+              󰌷 link_to_dir_14
+              󰌷 link_to_dir_15
+              󰌷 link_to_dir_16
+              󰌷 link_to_dir_17
+              󰌷 link_to_dir_18
+              󰌷 link_to_dir_19
+              󰌷 link_to_dir_20
+              󰌷 link_to_dir_21
+              󰌷 link_to_dir_22
+              󰌷 link_to_dir_23
+              󰌷 link_to_dir_24
+              󰌷 link_to_dir_25
+              󰌷 link_to_dir_26
+              󰌷 link_to_dir_27
+              󰌷 link_to_dir_28
+              󰌷 link_to_dir_29
+              󰌷 link_to_dir_30
+              󰌷 link_to_dir_31
+              󰌷 link_to_dir_32
+              󰌷 link_to_dir_33
+              󰌷 link_to_dir_34
+              󰌷 link_to_dir_35
+              󰌷 link_to_dir_36
+              󰌷 link_to_dir_37
+              󰌷 link_to_dir_38
+              󰌷 link_to_dir_39
+              󰌷 link_to_dir_40
+              󰌷 link_to_dir_41
+              󰌷 link_to_dir_42
+              󰌷 link_to_dir_43
+              󰌷 link_to_dir_44
+              󰌷 link_to_dir_45
+              󰌷 link_to_dir_46
+              󰌷 link_to_dir_47
+              󰌷 link_to_dir_48
+              󰌷 link_to_dir_49
+              󰌷 link_to_dir_50
+
+0 files (0 b)

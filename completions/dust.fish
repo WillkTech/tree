@@ -28,6 +28,10 @@ complete -c dust -l collapse -d 'Keep these directories collapsed' -r -F
 complete -c dust -s m -l filetime -d 'Directory \'size\' is max filetime of child files instead of disk size. while a/c/m for last accessed/changed/modified time' -r -f -a "a\t'last accessed time'
 c\t'last changed time'
 m\t'last modified time'"
+complete -c dust -l style -d 'Output style. tree reproduces the legacy tree.zsh layout byte-for-byte' -r -f -a "dust\t'Default dust output (percent bars)'
+tree\t'tree.zsh-compatible output'"
+complete -c dust -l sort -d 'Sort mode for --style tree: size (dirs first, size desc, name asc) or name. Ignored by the dust style' -r -f -a "size\t'Dirs first, then size descending, name ascending on ties'
+name\t'Per-component name ascending; files before dirs on identical basenames'"
 complete -c dust -s p -l full-paths -d 'Subdirectories will not have their path shortened'
 complete -c dust -s L -l dereference-links -d 'dereference sym links - Treat sym links as directories and go into them'
 complete -c dust -s x -l limit-filesystem -d 'Only count the files and directories on the same filesystem as the supplied directory'

@@ -191,6 +191,35 @@ pub struct Cli {
     /// while a/c/m for last accessed/changed/modified time
     #[arg(short('m'), long, value_enum)]
     pub filetime: Option<FileTime>,
+
+    /// Output style. tree reproduces the legacy tree.zsh layout byte-for-byte.
+    #[arg(long, value_enum, default_value = "dust")]
+    pub style: OutputStyle,
+
+    /// Sort mode for --style tree: size (dirs first, size desc, name asc) or
+    /// name. Ignored by the dust style.
+    #[arg(long, value_enum, default_value = "size")]
+    pub sort: SortMode,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ValueEnum)]
+#[value(rename_all = "lower")]
+pub enum OutputStyle {
+    /// Default dust output (percent bars)
+    Dust,
+
+    /// tree.zsh-compatible output
+    Tree,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ValueEnum)]
+#[value(rename_all = "lower")]
+pub enum SortMode {
+    /// Dirs first, then size descending, name ascending on ties
+    Size,
+
+    /// Per-component name ascending; files before dirs on identical basenames
+    Name,
 }
 
 #[derive(Clone, Copy, Debug, ValueEnum)]

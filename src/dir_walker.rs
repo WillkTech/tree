@@ -26,6 +26,7 @@ use crate::node::build_node;
 use std::fs::DirEntry;
 
 use crate::node::FileTime;
+use crate::node::FileType;
 use crate::platform::get_metadata;
 
 #[derive(Debug)]
@@ -50,6 +51,9 @@ pub struct WalkData<'a> {
     pub follow_links: bool,
     pub progress_data: Arc<PAtomicInfo>,
     pub errors: Arc<Mutex<RuntimeErrors>>,
+    // Tree style (plan §6): zsh-glob traversal of symlinked dirs + keep-all-rows
+    // aggregation. Default false keeps upstream behavior untouched.
+    pub tree_mode: bool,
 }
 
 // Per-directory bookkeeping used during the parallel walk. Each directory gets
@@ -121,13 +125,72 @@ pub fn walk_it(dirs: HashSet<PathBuf>, walk_data: &WalkData) -> Vec<Node> {
             .store(Operation::PREPARING, ORDERING);
 
         let mut outer_children = std::mem::take(&mut *outer.children.lock().unwrap());
-        if let Some(node) = outer_children.pop()
-            && let Some(cleaned) = clean_inodes(node, &mut inodes, walk_data)
-        {
+        let node = outer_children.pop();
+        let cleaned = match node {
+            Some(node) if walk_data.tree_mode => clean_inodes_tree(node, &mut inodes),
+            Some(node) => clean_inodes(node, &mut inodes, walk_data),
+            None => None,
+        };
+        if let Some(cleaned) = cleaned {
             top_level_nodes.push(cleaned);
         }
     }
     top_level_nodes
+}
+
+// Tree mode (plan §5 D1): keep every row — the script's glob pass shows every
+// file, including duplicate hardlinks — but the aggregate counts each inode
+// only once. Children are inode-sorted so the winner is deterministic. A
+// symlinked dir's subtree contributes nothing to the aggregate (gdu does not
+// descend into symlinks); the rows come from the glob pass.
+fn clean_inodes_tree(x: Node, inodes: &mut FxHashSet<(u64, u64)>) -> Option<Node> {
+    let Node {
+        name,
+        size,
+        size_apparent,
+        filetype,
+        children,
+        inode_device,
+        depth,
+    } = x;
+
+    let mut tmp = children;
+    tmp.sort_by(sort_by_inode);
+    let new_children: Vec<_> = tmp
+        .into_iter()
+        .filter_map(|c| clean_inodes_tree(c, inodes))
+        .collect();
+
+    let own = if filetype == FileType::File {
+        match inode_device {
+            Some(id) => {
+                if inodes.insert(id) {
+                    size
+                } else {
+                    0
+                }
+            }
+            None => size,
+        }
+    } else {
+        size
+    };
+
+    let child_sum: u64 = if filetype == FileType::Symlink {
+        0
+    } else {
+        new_children.iter().map(|c| c.size).sum()
+    };
+
+    Some(Node {
+        name,
+        size: own + child_sum,
+        size_apparent,
+        filetype,
+        children: new_children,
+        inode_device,
+        depth,
+    })
 }
 
 // Remove files which have the same inode, we don't want to double count them.
@@ -163,6 +226,8 @@ fn clean_inodes(x: Node, inodes: &mut FxHashSet<(u64, u64)>, walk_data: &WalkDat
     Some(Node {
         name: x.name,
         size: actual_size,
+        size_apparent: x.size_apparent,
+        filetype: x.filetype,
         children: new_children,
         inode_device: x.inode_device,
         depth: x.depth,
@@ -218,7 +283,7 @@ fn ignore_file(entry: &DirEntry, walk_data: &WalkData) -> bool {
 
     if !walk_data.allowed_filesystems.is_empty() {
         let size_inode_device = get_metadata(entry.path(), false, follow_links);
-        if let Some((_size, Some((_id, dev)), _gunk)) = size_inode_device
+        if let Some((_, _, Some((_id, dev)), _gunk)) = size_inode_device
             && !walk_data.allowed_filesystems.contains(&dev)
         {
             return true;
@@ -229,7 +294,7 @@ fn ignore_file(entry: &DirEntry, walk_data: &WalkData) -> bool {
         || walk_data.filter_changed_time.is_some()
     {
         let size_inode_device = get_metadata(entry.path(), false, follow_links);
-        if let Some((_, _, (modified_time, accessed_time, changed_time))) = size_inode_device
+        if let Some((_, _, _, (modified_time, accessed_time, changed_time))) = size_inode_device
             && entry.path().is_file()
             && [
                 (&walk_data.filter_modified_time, modified_time),
@@ -361,8 +426,14 @@ fn process_entry<'scope>(
     let data = entry.file_type().ok()?;
     let is_symlink = data.is_symlink();
 
+    // Tree mode: zsh globs traverse symlinked directories, so their file rows
+    // must exist in the tree (the symlink node itself stays a display leaf:
+    // its aggregate contribution is its own usage, like gdu's).
+    let descend_symlink =
+        walk_data.tree_mode && is_symlink && entry.path().metadata().is_ok_and(|m| m.is_dir());
+
     // If the entry is a directory we'll spawn off a new task to walk it.
-    if data.is_dir() || (walk_data.follow_links && is_symlink) {
+    if data.is_dir() || (walk_data.follow_links && is_symlink) || descend_symlink {
         // Increment must happen before scope.spawn so a fast child's decrement
         // can never observe pending = 0 before this walk_dir's finalize_chain
         // runs. It can be Relaxed ordering because rayon's scope spawn does
@@ -496,6 +567,8 @@ mod tests {
         Node {
             name: PathBuf::new(),
             size: 10,
+            size_apparent: 10,
+            filetype: FileType::File,
             children: vec![],
             inode_device: Some((5, 6)),
             depth: 0,
@@ -521,6 +594,7 @@ mod tests {
             follow_links: false,
             progress_data: indicator.data.clone(),
             errors: Arc::new(Mutex::new(RuntimeErrors::default())),
+            tree_mode: false,
         }
     }
 
@@ -566,6 +640,8 @@ mod tests {
         let a = Node {
             name: PathBuf::from_str("a").unwrap(),
             size: 0,
+            size_apparent: 0,
+            filetype: FileType::File,
             children: vec![],
             inode_device: Some((3, 66310)),
             depth: 0,
@@ -574,6 +650,8 @@ mod tests {
         let b = Node {
             name: PathBuf::from_str("b").unwrap(),
             size: 0,
+            size_apparent: 0,
+            filetype: FileType::File,
             children: vec![],
             inode_device: None,
             depth: 0,
@@ -582,6 +660,8 @@ mod tests {
         let c = Node {
             name: PathBuf::from_str("c").unwrap(),
             size: 0,
+            size_apparent: 0,
+            filetype: FileType::File,
             children: vec![],
             inode_device: Some((1, 66310)),
             depth: 0,

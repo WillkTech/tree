@@ -50,7 +50,7 @@ pub fn get_filesystem_devices<P: AsRef<Path>>(paths: &[P], follow_links: bool) -
                 false
             };
             match get_metadata(p, false, follow_links) {
-                Some((_size, Some((_id, dev)), _time)) => Some(dev),
+                Some((_, _apparent, Some((_id, dev)), _time)) => Some(dev),
                 _ => None,
             }
         })

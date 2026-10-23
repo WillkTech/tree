@@ -21,12 +21,15 @@ fn filetime_to_unix_seconds(filetime: u64) -> i64 {
     ((i128::from(filetime) - UNIX_EPOCH_FILETIME).div_euclid(TICKS_PER_SECOND)) as i64
 }
 
+/// Returns (disk usage, apparent size, inode/device, filetimes) in one stat.
+/// The caller picks which size to use so tree mode can keep both unconditionally.
 #[cfg(target_family = "unix")]
 pub fn get_metadata<P: AsRef<Path>>(
     path: P,
     use_apparent_size: bool,
     follow_links: bool,
-) -> Option<(u64, Option<InodeAndDevice>, FileTime)> {
+) -> Option<(u64, u64, Option<InodeAndDevice>, FileTime)> {
+    let _ = use_apparent_size;
     use std::os::unix::fs::MetadataExt;
     let metadata = if follow_links {
         path.as_ref().metadata()
@@ -36,46 +39,41 @@ pub fn get_metadata<P: AsRef<Path>>(
     match metadata {
         Ok(md) => {
             let file_size = md.len();
-            if use_apparent_size {
-                Some((
-                    file_size,
-                    Some((md.ino(), md.dev())),
-                    (md.mtime(), md.atime(), md.ctime()),
-                ))
-            } else {
-                // On NTFS mounts, the reported block count can be unexpectedly large.
-                // To avoid overestimating disk usage, cap the allocated size to what the
-                // file should occupy based on the file system I/O block size (blksize).
-                // Related: https://github.com/bootandy/dust/issues/295
-                let blksize = md.blksize();
-                let target_size = file_size.div_ceil(blksize) * blksize;
-                let reported_size = md.blocks() * get_block_size();
+            // On NTFS mounts, the reported block count can be unexpectedly large.
+            // To avoid overestimating disk usage, cap the allocated size to what the
+            // file should occupy based on the file system I/O block size (blksize).
+            // Related: https://github.com/bootandy/dust/issues/295
+            let blksize = md.blksize();
+            let target_size = file_size.div_ceil(blksize) * blksize;
+            let reported_size = md.blocks() * get_block_size();
 
-                // File systems can pre-allocate more space for a file than what would be necessary
-                let pre_allocation_buffer = blksize * 65536;
-                let max_size = target_size + pre_allocation_buffer;
-                let allocated_size = if reported_size > max_size {
-                    target_size
-                } else {
-                    reported_size
-                };
-                Some((
-                    allocated_size,
-                    Some((md.ino(), md.dev())),
-                    (md.mtime(), md.atime(), md.ctime()),
-                ))
-            }
+            // File systems can pre-allocate more space for a file than what would be necessary
+            let pre_allocation_buffer = blksize * 65536;
+            let max_size = target_size + pre_allocation_buffer;
+            let allocated_size = if reported_size > max_size {
+                target_size
+            } else {
+                reported_size
+            };
+            Some((
+                allocated_size,
+                file_size,
+                Some((md.ino(), md.dev())),
+                (md.mtime(), md.atime(), md.ctime()),
+            ))
         }
         Err(_e) => None,
     }
 }
 
+/// Returns (disk usage, apparent size, inode/device, filetimes). Windows is
+/// best-effort on the split; the tree-style goldens are macOS-only by design.
 #[cfg(target_family = "windows")]
 pub fn get_metadata<P: AsRef<Path>>(
     path: P,
     use_apparent_size: bool,
     follow_links: bool,
-) -> Option<(u64, Option<InodeAndDevice>, FileTime)> {
+) -> Option<(u64, u64, Option<InodeAndDevice>, FileTime)> {
     // On windows opening the file to get size, file ID and volume can be very
     // expensive because 1) it causes a few system calls, and more importantly 2) it can cause
     // windows defender to scan the file.
@@ -142,33 +140,28 @@ pub fn get_metadata<P: AsRef<Path>>(
     fn get_metadata_expensive(
         path: &Path,
         use_apparent_size: bool,
-    ) -> Option<(u64, Option<InodeAndDevice>, FileTime)> {
+    ) -> Option<(u64, u64, Option<InodeAndDevice>, FileTime)> {
         use winapi_util::file::information;
 
         let h = handle_from_path_limited(path).ok()?;
         let info = information(&h).ok()?;
 
+        let inode = Some((info.file_index(), info.volume_serial_number()));
+        let times = (
+            filetime_to_unix_seconds(info.last_write_time().unwrap()),
+            filetime_to_unix_seconds(info.last_access_time().unwrap()),
+            filetime_to_unix_seconds(info.creation_time().unwrap()),
+        );
+
+        // Keep both slots at the value the original code would have selected
+        // for this mode; the usage/apparent split is not meaningful on Windows.
         if use_apparent_size {
             use filesize::PathExt;
-            Some((
-                path.size_on_disk().ok()?,
-                Some((info.file_index(), info.volume_serial_number())),
-                (
-                    filetime_to_unix_seconds(info.last_write_time().unwrap()),
-                    filetime_to_unix_seconds(info.last_access_time().unwrap()),
-                    filetime_to_unix_seconds(info.creation_time().unwrap()),
-                ),
-            ))
+            let s = path.size_on_disk().ok()?;
+            Some((s, s, inode, times))
         } else {
-            Some((
-                info.file_size(),
-                Some((info.file_index(), info.volume_serial_number())),
-                (
-                    filetime_to_unix_seconds(info.last_write_time().unwrap()),
-                    filetime_to_unix_seconds(info.last_access_time().unwrap()),
-                    filetime_to_unix_seconds(info.creation_time().unwrap()),
-                ),
-            ))
+            let s = info.file_size();
+            Some((s, s, inode, times))
         }
     }
 
@@ -208,6 +201,7 @@ pub fn get_metadata<P: AsRef<Path>>(
                 && !((attr_filtered & IS_PROBABLY_ONEDRIVE != 0) && use_apparent_size)
             {
                 Some((
+                    md.len(),
                     md.len(),
                     None,
                     (

@@ -71,6 +71,10 @@ m\:"last modified time"))' \
 '--filetime=[Directory '\''size'\'' is max filetime of child files instead of disk size. while a/c/m for last accessed/changed/modified time]:FILETIME:((a\:"last accessed time"
 c\:"last changed time"
 m\:"last modified time"))' \
+'--style=[Output style. tree reproduces the legacy tree.zsh layout byte-for-byte]:STYLE:((dust\:"Default dust output (percent bars)"
+tree\:"tree.zsh-compatible output"))' \
+'--sort=[Sort mode for --style tree\: size (dirs first, size desc, name asc) or name. Ignored by the dust style]:SORT:((size\:"Dirs first, then size descending, name ascending on ties"
+name\:"Per-component name ascending; files before dirs on identical basenames"))' \
 '-p[Subdirectories will not have their path shortened]' \
 '--full-paths[Subdirectories will not have their path shortened]' \
 '-L[dereference sym links - Treat sym links as directories and go into them]' \

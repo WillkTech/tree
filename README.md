@@ -143,6 +143,39 @@ Usage: dust --dim Displays dimmer bars
 
 ```
 
+## Tree style (`--style tree`)
+
+This fork adds a `tree` output style that reproduces the legacy
+`tree.zsh` shell script (gdu + zsh globbing + zstat, ~1.6 s for 10k files)
+in a single process, byte-for-byte, in tens of milliseconds:
+
+```
+ztree --style tree [--sort size|name] [--depth N] [PATH] [--force-colors]
+```
+
+(`ztree` is the muscle-memory name; the installed binary is `dust` — add a
+symlink or alias, or invoke `dust --style tree` directly.)
+
+- `--depth N` is the script's display depth: directories up to N, files and
+  symlinks up to N+1 (N=0 shows the top level only).
+- `--sort size` (default): dirs first, then size descending, name ascending
+  on ties. `--sort name`: per-component name ascending; files sort before
+  dirs on identical basenames. Names compare in byte order (the script's
+  behavior under `LC_ALL=C`; under a UTF-8 locale zsh's `(o)` sort collates
+  punctuation differently).
+- Directory sizes are disk usage (blocks); file sizes are apparent size;
+  symlink rows show the target's apparent size (0 if dangling). Symlinked
+  directories are not descended into for size purposes (like gdu) but their
+  contents appear as rows (like the script's glob pass), and a symlinked dir
+  at display depth renders twice: as a dir row and as a link row.
+- Colors follow `NO_COLOR`/TTY detection (`--force-colors` to force); the
+  legacy script colored unconditionally.
+- Everything else (default dust output, JSON, TUI) is unchanged.
+
+The zsh wrapper lives at [zsh/tree.zsh](zsh/tree.zsh); the old implementation
+is kept as `tree_legacy()` for one release. Golden tests:
+`scripts/make_corpus.sh` + `scripts/golden.sh` (macOS only — APFS sizes).
+
 ## Config file
 
 Dust has a config file where the above options can be set.

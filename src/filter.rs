@@ -58,6 +58,8 @@ fn total_node_builder(size: u64, children: Vec<Node>) -> Node {
     Node {
         name: PathBuf::from("(total)"),
         size,
+        size_apparent: size,
+        filetype: crate::node::FileType::Dir,
         children,
         inode_device: None,
         depth: 0,
@@ -202,6 +204,8 @@ fn handle_duplicate_top_level_names(top_level_nodes: Vec<Node>, short_paths: boo
                         let n = Node {
                             name: PathBuf::from(format!("{current_node}({parent})")),
                             size: node.size,
+                            size_apparent: node.size_apparent,
+                            filetype: node.filetype,
                             children: node.children.clone(),
                             inode_device: node.inode_device,
                             depth: node.depth,

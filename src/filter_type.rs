@@ -109,6 +109,8 @@ mod tests {
         Node {
             name: PathBuf::from(name),
             size,
+            size_apparent: size,
+            filetype: crate::node::FileType::File,
             children: vec![],
             inode_device: None,
             depth: 1,

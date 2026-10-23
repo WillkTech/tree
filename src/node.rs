@@ -10,10 +10,22 @@ use std::path::PathBuf;
 #[derive(Debug, Eq, Clone)]
 pub struct Node {
     pub name: PathBuf,
+    // Existing: usage (blocks) or apparent per global mode
     pub size: u64,
+    // NEW: always apparent size; for symlinks, the target's size (0 if dangling)
+    pub size_apparent: u64,
+    // NEW: lstat-based file type, for the tree style
+    pub filetype: FileType,
     pub children: Vec<Node>,
     pub inode_device: Option<(u64, u64)>,
     pub depth: usize,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FileType {
+    Dir,
+    File,
+    Symlink,
 }
 
 #[derive(Debug, PartialEq)]
@@ -52,15 +64,15 @@ pub fn build_node(
         walk_data.follow_links && is_symlink,
     )
     .map(|data| {
-        let inode_device = data.1;
+        let (usage, apparent, inode_device, times) = data;
 
         let size = if is_filtered_out_due_to_regex(walk_data.filter_regex, &dir)
             || is_filtered_out_due_to_invert_regex(walk_data.invert_filter_regex, &dir)
             || by_filecount && !is_file
             || [
-                (&walk_data.filter_modified_time, data.2.0),
-                (&walk_data.filter_accessed_time, data.2.1),
-                (&walk_data.filter_changed_time, data.2.2),
+                (&walk_data.filter_modified_time, times.0),
+                (&walk_data.filter_accessed_time, times.1),
+                (&walk_data.filter_changed_time, times.2),
             ]
             .iter()
             .any(|(filter_time, actual_time)| {
@@ -71,18 +83,38 @@ pub fn build_node(
             1
         } else if by_filetime.is_some() {
             match by_filetime {
-                Some(FileTime::Modified) => data.2.0.unsigned_abs(),
-                Some(FileTime::Accessed) => data.2.1.unsigned_abs(),
-                Some(FileTime::Changed) => data.2.2.unsigned_abs(),
+                Some(FileTime::Modified) => times.0.unsigned_abs(),
+                Some(FileTime::Accessed) => times.1.unsigned_abs(),
+                Some(FileTime::Changed) => times.2.unsigned_abs(),
                 None => unreachable!(),
             }
+        } else if use_apparent_size {
+            apparent
         } else {
-            data.0
+            usage
+        };
+
+        let filetype = if is_symlink {
+            FileType::Symlink
+        } else if is_file {
+            FileType::File
+        } else {
+            FileType::Dir
+        };
+
+        // Symlink display size = the target's apparent size (the script's
+        // `zstat -L`); dangling links get 0. One extra stat per symlink only.
+        let size_apparent = if is_symlink && !walk_data.follow_links {
+            std::fs::metadata(&dir).map(|m| m.len()).unwrap_or(0)
+        } else {
+            apparent
         };
 
         Node {
             name: dir,
             size,
+            size_apparent,
+            filetype,
             children,
             inode_device,
             depth,

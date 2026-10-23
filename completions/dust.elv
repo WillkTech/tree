@@ -52,6 +52,8 @@ set edit:completion:arg-completer[dust] = {|@words|
             cand --collapse 'Keep these directories collapsed'
             cand -m 'Directory ''size'' is max filetime of child files instead of disk size. while a/c/m for last accessed/changed/modified time'
             cand --filetime 'Directory ''size'' is max filetime of child files instead of disk size. while a/c/m for last accessed/changed/modified time'
+            cand --style 'Output style. tree reproduces the legacy tree.zsh layout byte-for-byte'
+            cand --sort 'Sort mode for --style tree: size (dirs first, size desc, name asc) or name. Ignored by the dust style'
             cand -p 'Subdirectories will not have their path shortened'
             cand --full-paths 'Subdirectories will not have their path shortened'
             cand -L 'dereference sym links - Treat sym links as directories and go into them'

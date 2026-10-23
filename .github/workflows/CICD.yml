@@ -38,6 +38,27 @@ jobs:
         if: success() || failure() # run regardless of fmt outcome
         run: cargo clippy --locked -- -D warnings
 
+  golden-tree:
+    name: Golden tree style (macOS arm64)
+    # Goldens are macOS/APFS-only by design (plan §8.5): corpus file sizes are
+    # generated identically on any APFS volume, but Linux filesystems allocate
+    # differently and would change usage sizes.
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Build
+        run: cargo build --release
+      - name: Generate corpora
+        run: ./scripts/make_corpus.sh /tmp/treecorp
+      - name: cargo test
+        run: cargo test --locked
+      - name: Golden check
+        env:
+          INCLUDE_LARGE: "1"
+        run: ./scripts/golden.sh check
+
   build:
     name: Build
     runs-on: ${{ matrix.job.os }}

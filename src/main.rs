@@ -8,6 +8,7 @@ mod filter_type;
 mod node;
 mod platform;
 mod progress;
+mod tree_style;
 mod utils;
 
 use crate::cli::Cli;
@@ -259,6 +260,7 @@ fn main() {
         follow_links,
         progress_data: indicator.data.clone(),
         errors: errors_for_rayon,
+        tree_mode: options.style == cli::OutputStyle::Tree,
     };
 
     let threads_to_use = config.get_threads(&options);
@@ -272,6 +274,25 @@ fn main() {
 
     init_rayon(&threads_to_use).install(|| {
         let top_level_nodes = walk_it(simplified_dirs, &walk_data);
+
+        if walk_data.tree_mode {
+            // Must have stopped indicator before we print to stderr
+            indicator.stop();
+            print_any_errors(
+                config.get_print_errors(&options),
+                &walk_data.errors.lock().unwrap(),
+            );
+
+            let opts = tree_style::TreeOpts {
+                display_depth: depth,
+                sort: options.sort,
+                colors: is_colors,
+            };
+            let mut out = std::io::BufWriter::new(std::io::stdout());
+            tree_style::render_tree(&top_level_nodes, &opts, &mut out).unwrap();
+            std::io::Write::flush(&mut out).unwrap();
+            return;
+        }
 
         let tree = match summarize_file_types {
             true => get_all_file_types(&top_level_nodes, number_of_lines, walk_data.by_filetime),
