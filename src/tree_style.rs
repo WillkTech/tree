@@ -189,12 +189,17 @@ fn collect_glob_rows(root: &Node, l_eff: usize, rows: &mut Vec<Row>, display_dep
                 FileType::Dir => None,
             };
             if let Some(rtype) = rtype {
-                rows.push(make_row(
-                    components(child, root),
-                    rtype,
-                    child.size_apparent,
-                    display_depth,
-                ));
+                let comps = components(child, root);
+                // Script quirk: `zstat -L -A` treats paths starting with '-'
+                // as options, so the file loop's `|| continue` drops those
+                // rows (link rows survive: their loop defaults the size).
+                if rtype == RowType::File && comps[0].starts_with(b"-") {
+                    if child.filetype == FileType::Dir || resolves_to_dir(child) {
+                        stack.push(child);
+                    }
+                    continue;
+                }
+                rows.push(make_row(comps, rtype, child.size_apparent, display_depth));
             }
             if child.filetype == FileType::Dir || resolves_to_dir(child) {
                 stack.push(child);
@@ -223,8 +228,38 @@ fn itoa19(n: u64) -> [u8; 19] {
     buf
 }
 
-/// Ancestor lookup table: directory rows only (the script's row_by_path).
-type RowByPath = FxHashMap<Vec<Vec<u8>>, usize>;
+/// index zero-padded to 8 digits (the script's (l.8.0)), no alloc.
+fn itoa8(n: usize) -> [u8; 8] {
+    let mut buf = [b'0'; 8];
+    let mut v = n;
+    let mut i = 8;
+    while i > 0 {
+        i -= 1;
+        buf[i] = b'0' + (v % 10) as u8;
+        v /= 10;
+        if v == 0 {
+            break;
+        }
+    }
+    buf
+}
+
+/// Ancestor lookup table: directory rows only (the script's row_by_path,
+/// keyed by the '/'-joined relative path).
+type RowByPath = FxHashMap<Vec<u8>, usize>;
+
+/// '/'-joined relative path (the script's hash keys); names cannot contain
+/// '/'.
+fn flat_path(components: &[Vec<u8>]) -> Vec<u8> {
+    let mut p: Vec<u8> = Vec::new();
+    for (j, c) in components.iter().enumerate() {
+        if j > 0 {
+            p.push(b'/');
+        }
+        p.extend_from_slice(c);
+    }
+    p
+}
 
 fn sort_key(row: &Row, rows: &[Row], row_by_path: &RowByPath, sort: SortMode) -> Vec<u8> {
     let n = row.components.len();
@@ -241,7 +276,7 @@ fn sort_key(row: &Row, rows: &[Row], row_by_path: &RowByPath, sort: SortMode) ->
                         Some(row.size),
                     )
                 } else {
-                    match row_by_path.get(&row.components[..=j].to_vec()) {
+                    match row_by_path.get(&flat_path(&row.components[..=j])) {
                         Some(&idx) => (
                             if rows[idx].rtype == RowType::Dir {
                                 0
@@ -317,7 +352,16 @@ fn top_level_counters(root: &Node) -> Counters {
             FileType::Dir => c.ndirs += 1,
             FileType::File => {
                 c.nfiles += 1;
-                c.files_size += child.size_apparent;
+                // zstat-failure quirk: top-level names starting with '-' are
+                // skipped by the script's summing loop, but still counted.
+                let base = child
+                    .name
+                    .file_name()
+                    .map(|n| n.as_encoded_bytes().to_vec())
+                    .unwrap_or_default();
+                if !base.starts_with(b"-") {
+                    c.files_size += child.size_apparent;
+                }
             }
             FileType::Symlink => {}
         }
@@ -385,33 +429,41 @@ fn render_one(root: &Node, opts: &TreeOpts, out: &mut impl Write) -> std::io::Re
     for (idx, row) in rows.iter_mut().enumerate() {
         row.idx = idx;
         if row.rtype == RowType::Dir {
-            row_by_path.insert(row.components.clone(), idx);
+            row_by_path.insert(flat_path(&row.components), idx);
         }
     }
-    // Keys reference rows by index, so build them all before sorting.
+    // Keys reference rows by index, so build them all before sorting. The
+    // script sorts "key\t<index zero-padded to 8>" as one string — the tab
+    // suffix decides ties (e.g. name mode: a dir's trailing \x01 sorts before
+    // a file's bare name because \x01 < \t). Reproduce the full string.
     for i in 0..rows.len() {
-        let key = sort_key(&rows[i], &rows, &row_by_path, opts.sort);
+        let mut key = sort_key(&rows[i], &rows, &row_by_path, opts.sort);
+        key.push(b'\t');
+        key.extend_from_slice(&itoa8(rows[i].idx));
         rows[i].key = key;
     }
 
-    // Native lexical sort, byte order, insertion index as tiebreak (§4.4).
-    // Keys are unique in practice; the index tiebreak keeps it deterministic.
-    rows.sort_unstable_by(|a, b| a.key.cmp(&b.key).then(a.idx.cmp(&b.idx)));
+    // Native lexical sort, byte order (§4.4). Sort indices, not rows: the
+    // rows carry the key buffers and we do not want to move them.
+    let mut order: Vec<usize> = (0..rows.len()).collect();
+    order.sort_unstable_by(|&a, &b| rows[a].key.cmp(&rows[b].key));
 
-    // Sibling pass (§4.5): reverse, keyed by path string — duplicate paths
-    // (nested symlinked dirs) share one entry, exactly like the script.
-    let mut has_later_sibling: FxHashMap<Vec<Vec<u8>>, bool> = FxHashMap::default();
-    let mut seen_parent: FxHashMap<Vec<Vec<u8>>, bool> = FxHashMap::default();
-    for row in rows.iter().rev() {
+    // Sibling pass (§4.5): reverse, keyed by the '/'-joined path string —
+    // duplicate paths (nested symlinked dirs) share one entry, exactly like
+    // the script.
+    let mut has_later_sibling: FxHashMap<Vec<u8>, bool> = FxHashMap::default();
+    let mut seen_parent: FxHashMap<Vec<u8>, bool> = FxHashMap::default();
+    for &i in order.iter().rev() {
+        let row = &rows[i];
         if row.components.len() > 1 {
-            let parent = row.components[..row.components.len() - 1].to_vec();
+            let parent = flat_path(&row.components[..row.components.len() - 1]);
             has_later_sibling.insert(
-                row.components.clone(),
+                flat_path(&row.components),
                 seen_parent.get(&parent).copied().unwrap_or(false),
             );
             seen_parent.insert(parent, true);
         } else {
-            has_later_sibling.insert(row.components.clone(), false);
+            has_later_sibling.insert(flat_path(&row.components), false);
         }
     }
 
@@ -430,11 +482,12 @@ fn render_one(root: &Node, opts: &TreeOpts, out: &mut impl Write) -> std::io::Re
     )?;
     writeln!(out, "  {:->maxw$}  {:->dirlen$}", "", "")?;
 
-    // Rows (§4.5).
-    for row in rows.iter() {
+    // Rows (§4.5), in sorted order.
+    for &i in order.iter() {
+        let row = &rows[i];
         let depth = row.components.len();
         let name = &row.components[depth - 1];
-        let flag = |path: &Vec<Vec<u8>>| has_later_sibling.get(path).copied().unwrap_or(false);
+        let flag = |path: &Vec<u8>| has_later_sibling.get(path).copied().unwrap_or(false);
 
         write!(
             out,
@@ -445,7 +498,7 @@ fn render_one(root: &Node, opts: &TreeOpts, out: &mut impl Write) -> std::io::Re
         if depth > 1 {
             // Prefix stack + connector.
             for j in 1..depth - 1 {
-                let ancestor = row.components[..j].to_vec();
+                let ancestor = flat_path(&row.components[..j]);
                 if flag(&ancestor) {
                     out.write_all(cbranch)?;
                     out.write_all("│   ".as_bytes())?;
@@ -455,7 +508,7 @@ fn render_one(root: &Node, opts: &TreeOpts, out: &mut impl Write) -> std::io::Re
                 }
             }
             out.write_all(cbranch)?;
-            if flag(&row.components) {
+            if flag(&flat_path(&row.components)) {
                 out.write_all("├── ".as_bytes())?;
             } else {
                 out.write_all("└── ".as_bytes())?;
@@ -593,8 +646,8 @@ mod tests {
         let f = row(vec![b"z"], RowType::File, 3 * MIB);
         let rows = vec![d_big, d_small, f];
         let mut map = RowByPath::default();
-        map.insert(vec![b"b".to_vec()], 0);
-        map.insert(vec![b"a".to_vec()], 1);
+        map.insert(b"b".to_vec(), 0);
+        map.insert(b"a".to_vec(), 1);
 
         let k_big = key_of(&rows, 0, &map, SortMode::Size);
         let k_small = key_of(&rows, 1, &map, SortMode::Size);
@@ -607,15 +660,15 @@ mod tests {
         let d2 = row(vec![b"y"], RowType::Dir, MIB);
         let rows2 = vec![d1, d2];
         let mut map2 = RowByPath::default();
-        map2.insert(vec![b"x".to_vec()], 0);
-        map2.insert(vec![b"y".to_vec()], 1);
+        map2.insert(b"x".to_vec(), 0);
+        map2.insert(b"y".to_vec(), 1);
         assert!(
             key_of(&rows2, 0, &map2, SortMode::Size) < key_of(&rows2, 1, &map2, SortMode::Size)
         );
     }
 
     #[test]
-    fn test_name_mode_files_before_dirs_on_identical_basename() {
+    fn test_name_mode_dirs_before_files_on_identical_basename() {
         let d = row(vec![b"foo"], RowType::Dir, MIB);
         let f = row(vec![b"foo"], RowType::File, MIB);
         let rows = vec![d, f];
@@ -624,9 +677,14 @@ mod tests {
         let k_file = key_of(&rows, 1, &map, SortMode::Name);
         assert_eq!(k_file, b"foo".to_vec());
         assert_eq!(k_dir, [b"foo".to_vec(), vec![SEP]].concat());
+        // The script sorts the full "key\t<index>" string: the dir's trailing
+        // \x01 (0x01) sorts before the file key's \t (0x09) -> dirs first.
+        // Goldens (symlinks.*.name) pin this; the plan §4.4 guess was wrong.
+        let full_dir = [k_dir.as_slice(), b"\t00000000"].concat();
+        let full_file = [k_file.as_slice(), b"\t00000001"].concat();
         assert!(
-            k_file < k_dir,
-            "files sort before dirs on identical basenames"
+            full_dir < full_file,
+            "dirs sort before files on identical basenames"
         );
     }
 
@@ -687,18 +745,15 @@ mod tests {
         std::os::unix::fs::symlink("emptydir", root.join("link_to_dir")).unwrap();
         std::os::unix::fs::symlink("nowhere", root.join("dangling")).unwrap();
 
-        // Build the tree the way the tree-mode walker would: symlinks are
-        // leaves with size_apparent = target size (0 if dangling).
+        // Build the tree the way the tree-mode walker would: symlink leaves
+        // carry size_apparent = their own lstat size (the script's
+        // `zstat -L -A` quirk does not actually follow links).
         let mut root_node = node(root.to_str().unwrap(), FileType::Dir, 0, 0, 0);
         let sz = |p: &str, ft: FileType| {
             let full = root.join(p);
-            let apparent = if ft == FileType::Symlink {
-                std::fs::metadata(&full).map(|m| m.len()).unwrap_or(0)
-            } else {
-                std::fs::symlink_metadata(&full)
-                    .map(|m| m.len())
-                    .unwrap_or(0)
-            };
+            let apparent = std::fs::symlink_metadata(&full)
+                .map(|m| m.len())
+                .unwrap_or(0);
             node(full.to_str().unwrap(), ft, 0, apparent, 1)
         };
         root_node.children.push(sz("realdir", FileType::Dir));
@@ -724,13 +779,17 @@ mod tests {
         let text = String::from_utf8(out).unwrap();
 
         // maxw is 10 here (the header total "       0Mb" is 10 chars).
-        // link_to_file: target apparent size 3 MiB -> shows 3.
+        // Link rows carry the symlink's own size (path length) -> all blank.
         assert!(
-            text.contains("           3  \u{F0337} link_to_file"),
+            text.contains("           3  \u{F0214} big.bin"),
+            "big.bin shows 3: {text}"
+        );
+        assert!(
+            text.contains("              \u{F0337} link_to_file"),
             "{text}"
         );
         // link_to_dir: appears twice — as a dir row (gdu size 0 -> blank) and
-        // as a link row (target = emptydir, 96 bytes -> blank).
+        // as a link row (own size 8 -> blank).
         assert!(
             text.contains("              \u{F024B} link_to_dir/"),
             "{text}"
@@ -739,7 +798,7 @@ mod tests {
             text.contains("              \u{F0337} link_to_dir\n"),
             "{text}"
         );
-        // Dangling link: size 0 -> blank column.
+        // Dangling link: own size -> blank column.
         assert!(text.contains("              \u{F0337} dangling"), "{text}");
         // realdir/emptydir dirs are rows; their contents are not (depth 0).
         assert!(text.contains("              \u{F024B} realdir/"), "{text}");

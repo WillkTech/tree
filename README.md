@@ -159,15 +159,19 @@ symlink or alias, or invoke `dust --style tree` directly.)
 - `--depth N` is the script's display depth: directories up to N, files and
   symlinks up to N+1 (N=0 shows the top level only).
 - `--sort size` (default): dirs first, then size descending, name ascending
-  on ties. `--sort name`: per-component name ascending; files sort before
-  dirs on identical basenames. Names compare in byte order (the script's
-  behavior under `LC_ALL=C`; under a UTF-8 locale zsh's `(o)` sort collates
-  punctuation differently).
+  on ties. `--sort name`: per-component name ascending; dirs sort before
+  files on identical basenames (the script sorts the full `key\t<index>`
+  string and the dir's trailing separator byte sorts before the tab). Names
+  compare in byte order (the script's behavior under `LC_ALL=C`; under a
+  UTF-8 locale zsh's `(o)` sort collates punctuation differently).
 - Directory sizes are disk usage (blocks); file sizes are apparent size;
-  symlink rows show the target's apparent size (0 if dangling). Symlinked
-  directories are not descended into for size purposes (like gdu) but their
-  contents appear as rows (like the script's glob pass), and a symlinked dir
-  at display depth renders twice: as a dir row and as a link row.
+  symlink rows show the symlink's own size (the script's `zstat -L -A`
+  quirk does not actually follow links, so link rows are always blank).
+  Symlinked directories are not descended into for size purposes (like gdu)
+  but their contents appear as rows (like the script's glob pass), and a
+  symlinked dir at display depth renders twice: as a dir row and as a link
+  row. Files whose relative path starts with `-` are dropped (the script's
+  `zstat` treats them as options).
 - Colors follow `NO_COLOR`/TTY detection (`--force-colors` to force); the
   legacy script colored unconditionally.
 - Everything else (default dust output, JSON, TUI) is unchanged.

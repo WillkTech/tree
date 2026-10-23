@@ -102,18 +102,12 @@ pub fn build_node(
             FileType::Dir
         };
 
-        // Symlink display size = the target's apparent size (the script's
-        // `zstat -L`); dangling links get 0. One extra stat per symlink only.
-        let size_apparent = if is_symlink && !walk_data.follow_links {
-            std::fs::metadata(&dir).map(|m| m.len()).unwrap_or(0)
-        } else {
-            apparent
-        };
-
         Node {
             name: dir,
             size,
-            size_apparent,
+            // For symlinks this is the lstat size (target-path length): the
+            // script's `zstat -L -A` quirk does not actually follow links.
+            size_apparent: apparent,
             filetype,
             children,
             inode_device,
