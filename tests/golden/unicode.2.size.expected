@@ -1,22 +1,22 @@
 
-        18Mb  4 dirs
-  ----------  ------
-           2  [1;34m󰉋 .hidden-dir/[0m
-           2  [2m└── [0m󰈔 .y.bin
-           2  [1;34m󰉋 dir with space/[0m
-           2  [2m└── [0m󰈔 inner file.bin
-           1  [1;34m󰉋 dir.CJK-目录/[0m
-           1  [2m└── [0m󰈔 内部.bin
-              [1;34m󰉋 -dir-dash/[0m
-           2  󰈔 a_b.bin
-           2  󰈔 dot.file.bin
-           2  󰈔 emoji-😀.bin
-           2  󰈔 sp ace.bin
-           1  󰈔 CJK-文件.bin
-           1  󰈔 plain.bin
-              󰈔 .hidden.bin
-              󰈔 a b.bin
-              󰈔 Ümlaut.bin
-              󰈔 a-b.bin
+        18  4 dirs (Mb)
+  --------  -----------
+         2  [1;34m󰉋 .hidden-dir/[0m
+         2  [2m└── [0m󰈔 .y.bin
+         2  [1;34m󰉋 dir with space/[0m
+         2  [2m└── [0m󰈔 inner file.bin
+         1  [1;34m󰉋 dir.CJK-目录/[0m
+         1  [2m└── [0m󰈔 内部.bin
+            [1;34m󰉋 -dir-dash/[0m
+         2  󰈔 a_b.bin
+         2  󰈔 dot.file.bin
+         2  󰈔 emoji-😀.bin
+         2  󰈔 sp ace.bin
+         1  󰈔 CJK-文件.bin
+         1  󰈔 plain.bin
+            󰈔 .hidden.bin
+            󰈔 a b.bin
+            󰈔 Ümlaut.bin
+            󰈔 a-b.bin
 
 11 files (11.8 Mb)

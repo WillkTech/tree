@@ -68,23 +68,26 @@ Example — `tree 1 --f`:
 
 ```
 
-        13Mb  2 dirs
-  ----------  ------
-           9  󰉋 src/
-           4  ├── 󰈔 main.rs
-           2  └── 󰈔 lib.rs
-           1  󰉋 docs/
-           1  └── 󰈔 README.md
-           2  󰈔 notes.txt
-           1  󰈔 Cargo.toml
+        10  2 dirs (Mb)
+  --------  -----------
+         6  󰉋 src/
+         4  ├── 󰈔 main.rs
+         2  └── 󰈔 lib.rs
+         1  󰉋 docs/
+         1  └── 󰈔 README.md
+         2  󰈔 notes.txt
+         1  󰈔 Cargo.toml
 
 2 files (3.0 Mb)
 ```
 
 The header shows the total size and the number of top-level folders; the
-footer shows the number of top-level files and their combined size. Folder
-sizes are disk usage (allocated blocks); file sizes are apparent size. Values
-below 1 MiB render blank in the size column (legacy behavior).
+footer shows the number of top-level files and their combined size. The size
+column is right-aligned and comma-grouped, so the least-significant digit of
+every row (and of the header total) sits in the same column: `222,570`,
+`222,164`, `213,372`, `5,821`, `18`. Folder sizes are disk usage (allocated
+blocks); file sizes are apparent size. Values below 1 MiB render blank in the
+size column (legacy behavior).
 
 ### Depth and files
 

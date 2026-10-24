@@ -131,8 +131,9 @@ _tree_fmt_mib() {
     # Round half to even, matching libc printf '%.0f'.
     (( r > 524288 || ( r == 524288 && ( q & 1 ) ) )) && (( q += 1 ))
 
-    # %8s pads but never truncates, unlike the (l.8.) flag.
-    printf -v "$1" '%8s' "$q"
+    # Comma-group so the least-significant digit stays aligned down the
+    # column (222,570 / 222,164 / 213,372 / 5,821); %8s pads, never truncates.
+    _tree_fmt_comma "$1" "$q"
 }
 
 # ----------------------------------------------------------------------------
@@ -563,12 +564,9 @@ _tree_render() {
                 depths[nrows]=$lvl
                 types[nrows]="link"
 
-                if (( fsize < 1048576 )); then
-                    formatted="${(l.8.)}"
-                else
-                    _tree_fmt_comma formatted "$(( fsize / 1048576 ))"
-                fi
-
+                # One formatter for every row type (matches the Rust renderer):
+                # comma-grouped, round half to even, blank below 1 MiB.
+                _tree_fmt_mib formatted "$fsize"
                 formatted_sizes[nrows]="$formatted"
 
                 if (( ${#formatted} > maxw )); then
@@ -595,12 +593,17 @@ _tree_render() {
 
         local file_str dir_hdr total_hdr
         (( nfiles == 1 )) && file_str="1 file" || file_str="$nfiles files"
-        (( ndirs == 1 )) && dir_hdr="1 dir" || dir_hdr="$ndirs dirs"
+        (( ndirs == 1 )) && dir_hdr="1 dir" || dir_hdr="$ndirs dirs (Mb)"
         _tree_fmt_comma total_hdr "$(( total / 1048576 ))"
-        total_hdr+='Mb'
 
-        printf '\n  %8s  %s\n' "$total_hdr" "$dir_hdr"
-        printf '  %8s  %s\n\n' '--------' '------'
+        # Column and dash widths follow the run's values, like the main path.
+        local -i ew=${#total_hdr}
+        (( ew < 8 )) && ew=8
+        local -i edirlen=${#dir_hdr}
+        (( edirlen < 4 )) && edirlen=4
+
+        printf '\n  %*s  %s\n' "$ew" "$total_hdr" "$dir_hdr"
+        printf '  %*s  %s\n\n' "$ew" "${(r:ew::-:)}" "${(r:edirlen::-:)}"
 
         printf '%s\n\n' 'No entries found.'
         printf '%s (%s)\n' "$file_str" "$(_tree_fmt_human "$files_size")"
@@ -772,11 +775,11 @@ _tree_render() {
     if (( ndirs == 1 )); then
         dir_hdr="1 dir"
     else
-        dir_hdr="$ndirs dirs"
+        dir_hdr="$ndirs dirs (Mb)"
     fi
 
     _tree_fmt_comma total_hdr "$(( total / 1048576 ))"
-    total_hdr+='Mb'
+    # The unit lives in the label, not on the number.
 
     if (( ${#total_hdr} > maxw )); then
         maxw=${#total_hdr}

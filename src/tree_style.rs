@@ -64,6 +64,8 @@ struct Row {
 // ---------------------------------------------------------------------------
 
 /// Fixed 8-char column, blank below 1 MiB, integer MiB, round half to even.
+/// Thousands are comma-grouped so the least-significant digit stays aligned
+/// down the column (222,570 / 222,164 / 213,372 / 5,821).
 fn fmt_mib_half_even(bytes: u64) -> Vec<u8> {
     if bytes < MIB {
         return b"        ".to_vec();
@@ -73,7 +75,7 @@ fn fmt_mib_half_even(bytes: u64) -> Vec<u8> {
     if r > HALF || (r == HALF && (q & 1) == 1) {
         q += 1;
     }
-    format!("{q:>8}").into_bytes()
+    fmt_comma(q)
 }
 
 /// Integer with comma thousands separators, right-aligned in 8 chars.
@@ -127,27 +129,19 @@ fn components(node: &Node, root: &Node) -> Vec<Vec<u8>> {
     rel.split(|b| *b == b'/').map(|c| c.to_vec()).collect()
 }
 
-fn formatter(bytes: u64, rtype: RowType, opts: &TreeOpts) -> Vec<u8> {
+/// The size column for a row. One formatter for every row type (dirs, files,
+/// links) — the reference script's depth-dependent symlink quirk is gone now
+/// that all rows share `_tree_fmt_mib`.
+fn formatter(bytes: u64, opts: &TreeOpts) -> Vec<u8> {
     if opts.by_filecount {
         // -f: the column shows counts (comma-grouped), no blank rule.
         return fmt_comma(bytes);
     }
-    match rtype {
-        // The depth-dependent symlink formatter quirk (D5): at depth 0 links
-        // use the MiB formatter; at depth >= 1, comma-grouped truncating MiB.
-        RowType::Link if opts.display_depth > 0 => {
-            if bytes < MIB {
-                b"        ".to_vec()
-            } else {
-                fmt_comma(bytes / MIB)
-            }
-        }
-        _ => fmt_mib_half_even(bytes),
-    }
+    fmt_mib_half_even(bytes)
 }
 
 fn make_row(components: Vec<Vec<u8>>, rtype: RowType, size: u64, opts: &TreeOpts) -> Row {
-    let formatted = formatter(size, rtype, opts);
+    let formatted = formatter(size, opts);
     Row {
         components,
         rtype,
@@ -424,10 +418,12 @@ fn render_one(root: &Node, opts: &TreeOpts, out: &mut impl Write) -> std::io::Re
     }
 
     let counters = top_level_counters(root);
+    // The script's header label: "(Mb)" rides on the plural branch only, so
+    // the singular "1 dir" stays bare. The total number carries no unit.
     let dir_hdr = if counters.ndirs == 1 {
         "1 dir".to_string()
     } else {
-        format!("{} dirs", counters.ndirs)
+        format!("{} dirs (Mb)", counters.ndirs)
     };
     let file_str = if counters.nfiles == 1 {
         "1 file".to_string()
@@ -435,10 +431,10 @@ fn render_one(root: &Node, opts: &TreeOpts, out: &mut impl Write) -> std::io::Re
         format!("{} files", counters.nfiles)
     };
     let total_hdr = if opts.by_filecount {
-        // -f: the header total is the total file count, no unit suffix.
+        // -f: the header total is the total file count.
         fmt_comma(root.size)
     } else {
-        [fmt_comma(root.size / MIB), b"Mb".to_vec()].concat()
+        fmt_comma(root.size / MIB)
     };
 
     let mut maxw: usize = 8;
@@ -450,19 +446,25 @@ fn render_one(root: &Node, opts: &TreeOpts, out: &mut impl Write) -> std::io::Re
     if total_hdr.len() > maxw {
         maxw = total_hdr.len();
     }
+    let dirlen = std::cmp::max(4, dir_hdr.len());
 
     if rows.is_empty() {
-        // Empty-result path (§4.6): fixed %8s column and fixed dash runs.
+        // Empty-result path (§4.6): the header column and dash runs follow the
+        // run's widths, like the script's %*s / (r::) pair.
         writeln!(out)?;
         writeln!(
             out,
-            "  {:>8}  {}",
+            "  {:>maxw$}  {}",
             String::from_utf8_lossy(&total_hdr),
             dir_hdr
         )?;
-        writeln!(out, "  --------  ------")?;
+        writeln!(out, "  {:->maxw$}  {:->dirlen$}", "", "")?;
         writeln!(out)?;
-        writeln!(out, "No entries found.")?;
+        if !opts.show_files && counters.nfiles > 0 {
+            writeln!(out, "No folders to show (use --f to include files).")?;
+        } else {
+            writeln!(out, "No entries found.")?;
+        }
         writeln!(out)?;
         writeln!(out, "{} ({})", file_str, fmt_human(counters.files_size))?;
         return Ok(());
@@ -654,6 +656,11 @@ mod tests {
             format!("{:>8}", 2).into_bytes()
         );
         assert_eq!(fmt_mib_half_even(5 * MIB), format!("{:>8}", 5).into_bytes());
+        // Comma grouping keeps the least-significant digit aligned down the
+        // column; the 8-char field only pads, never truncates.
+        assert_eq!(fmt_mib_half_even(213_372 * MIB), b" 213,372".to_vec());
+        assert_eq!(fmt_mib_half_even(5_821 * MIB), b"   5,821".to_vec());
+        assert_eq!(fmt_mib_half_even(2_222_164 * MIB), b"2,222,164".to_vec());
     }
 
     #[test]
@@ -824,36 +831,36 @@ mod tests {
             .push(sz("link_to_dir", FileType::Symlink));
         root_node.children.push(sz("dangling", FileType::Symlink));
 
-        // display_depth 0: top level only; links use the MiB formatter (D5).
+        // display_depth 0: top level only; every row shares one formatter.
         let opts = test_opts(0, true);
         let mut out: Vec<u8> = Vec::new();
         render_one(&root_node, &opts, &mut out).unwrap();
         let text = String::from_utf8(out).unwrap();
 
-        // maxw is 10 here (the header total "       0Mb" is 10 chars).
+        // maxw is 8 here (the header total "       0" no longer carries "Mb").
         // Link rows carry the symlink's own size (path length) -> all blank.
         assert!(
-            text.contains("           3  \u{F0214} big.bin"),
+            text.contains("         3  \u{F0214} big.bin"),
             "big.bin shows 3: {text}"
         );
         assert!(
-            text.contains("              \u{F0337} link_to_file"),
+            text.contains("            \u{F0337} link_to_file"),
             "{text}"
         );
         // link_to_dir: appears twice — as a dir row (gdu size 0 -> blank) and
         // as a link row (own size 8 -> blank).
         assert!(
-            text.contains("              \u{F024B} link_to_dir/"),
+            text.contains("            \u{F024B} link_to_dir/"),
             "{text}"
         );
         assert!(
-            text.contains("              \u{F0337} link_to_dir\n"),
+            text.contains("            \u{F0337} link_to_dir\n"),
             "{text}"
         );
         // Dangling link: own size -> blank column.
-        assert!(text.contains("              \u{F0337} dangling"), "{text}");
+        assert!(text.contains("            \u{F0337} dangling"), "{text}");
         // realdir/emptydir dirs are rows; their contents are not (depth 0).
-        assert!(text.contains("              \u{F024B} realdir/"), "{text}");
+        assert!(text.contains("            \u{F024B} realdir/"), "{text}");
         assert!(!text.contains("realdir/target.bin"), "{text}");
         // Footer counts top-level regular files only: plain.bin (0) + big.bin.
         assert!(text.ends_with("2 files (3.0 Mb)\n"), "{text}");
@@ -929,7 +936,8 @@ mod tests {
         let mut out: Vec<u8> = Vec::new();
         render_one(&root_node, &opts, &mut out).unwrap();
         let text = String::from_utf8(out).unwrap();
-        // maxw grows to the 10-char header total "   1,234" -> rows right-align to it.
+        // The 8-char header total "   1,234" sets the column; rows right-align
+        // to it.
         assert!(text.contains("     1,234  1 dir"), "{text}");
         assert!(text.contains("     1,000  \u{F024B} d/"), "{text}");
         assert!(text.contains("         1  \u{F0214} f.bin"), "{text}");
@@ -969,8 +977,9 @@ mod tests {
         let mut out: Vec<u8> = Vec::new();
         render_one(&root_node, &opts, &mut out).unwrap();
         let text = String::from_utf8(out).unwrap();
-        // maxw 10 (header "       2Mb"); row column right-aligns "       2".
-        assert!(text.contains("           2  \u{F024B} linkdir/"), "{text}");
+        // maxw is 8 (the header total "       2" no longer carries "Mb"); the
+        // row column right-aligns to it.
+        assert!(text.contains("         2  \u{F024B} linkdir/"), "{text}");
         // depth 0 -> files only at depth 1, so no inner.bin row; single row.
         assert_eq!(text.matches("linkdir").count(), 1, "{text}");
         assert!(!text.contains("inner.bin"), "{text}");
@@ -979,9 +988,9 @@ mod tests {
 
     #[test]
     fn test_maxw_growth_and_header() {
-        // A 6-digit MiB value (999999) grows the column to 6+... all formatted
-        // values are 8 chars, so maxw stays 8 for rows; the header total (10
-        // chars) pushes maxw to 10 — every normal run has maxw >= 10.
+        // Every formatted value fits the 8-char column, so maxw stays 8 and the
+        // header total ("       5") and label ("0 dirs (Mb)", 11 chars) set the
+        // dash runs.
         let tmp = tempfile::tempdir().unwrap();
         let root = tmp.path();
         std::fs::write(root.join("f.bin"), vec![0u8; 2 * MIB as usize]).unwrap();
@@ -1001,9 +1010,9 @@ mod tests {
         let lines: Vec<&str> = text.lines().collect();
         // blank, header, dashes, row, blank, footer
         assert_eq!(lines.len(), 6);
-        assert_eq!(lines[1], "         5Mb  0 dirs");
-        assert_eq!(lines[2], "  ----------  ------");
-        assert_eq!(lines[3], "           2  \u{F0214} f.bin");
+        assert_eq!(lines[1], "         5  0 dirs (Mb)");
+        assert_eq!(lines[2], "  --------  -----------");
+        assert_eq!(lines[3], "         2  \u{F0214} f.bin");
         assert_eq!(lines[5], "1 file (2.0 Mb)");
     }
 
@@ -1017,7 +1026,64 @@ mod tests {
         let text = String::from_utf8(out).unwrap();
         assert_eq!(
             text,
-            "\n         0Mb  0 dirs\n  --------  ------\n\nNo entries found.\n\n0 files (0 b)\n"
+            "\n         0  0 dirs (Mb)\n  --------  -----------\n\nNo entries found.\n\n0 files (0 b)\n"
+        );
+    }
+
+    #[test]
+    fn test_comma_column_keeps_digits_aligned() {
+        // The headline layout contract: thousands are comma-grouped and the
+        // least-significant digit of every row lines up on the same column,
+        // including the header total (222,164 / 213,372 / 5,821 / 18).
+        let mut root_node = node("/r", FileType::Dir, 1_462_570 * MIB, 0, 0);
+        for (name, mib) in [
+            ("big", 1_234_567u64),
+            ("mid", 222_164),
+            ("small", 5_821),
+            ("tiny", 18),
+        ] {
+            root_node.children.push(node(
+                format!("/r/{name}").as_str(),
+                FileType::Dir,
+                mib * MIB,
+                0,
+                1,
+            ));
+        }
+        let mut out: Vec<u8> = Vec::new();
+        render_one(&root_node, &test_opts(1, false), &mut out).unwrap();
+        let text = String::from_utf8(out).unwrap();
+        let lines: Vec<&str> = text.lines().collect();
+        let icon = '\u{F024B}';
+        // A 9-char value pushes the column (and the dash run) to 9.
+        assert_eq!(lines[1], "  1,462,570  4 dirs (Mb)");
+        assert_eq!(lines[2], "  ---------  -----------");
+        assert_eq!(lines[3], format!("  1,234,567  {icon} big/"));
+        assert_eq!(lines[4], format!("    222,164  {icon} mid/"));
+        assert_eq!(lines[5], format!("      5,821  {icon} small/"));
+        assert_eq!(lines[6], format!("         18  {icon} tiny/"));
+        // Every row's last digit sits in the same column (index 10), followed
+        // by the two-space gutter before the tree column.
+        for line in &lines[3..=6] {
+            assert!(line.as_bytes()[10].is_ascii_digit(), "{line}");
+            assert_eq!(&line.as_bytes()[11..13], b"  ", "{line}");
+        }
+    }
+
+    #[test]
+    fn test_no_folders_to_show_message() {
+        // Folders-only (the default) with top-level files but no folders: the
+        // script swaps "No entries found." for the --f hint.
+        let mut root_node = node("/r", FileType::Dir, 2 * MIB, 0, 0);
+        root_node
+            .children
+            .push(node("/r/f.bin", FileType::File, 0, 2 * MIB, 1));
+        let mut out: Vec<u8> = Vec::new();
+        render_one(&root_node, &test_opts(1, false), &mut out).unwrap();
+        let text = String::from_utf8(out).unwrap();
+        assert_eq!(
+            text,
+            "\n         2  0 dirs (Mb)\n  --------  -----------\n\nNo folders to show (use --f to include files).\n\n1 file (2.0 Mb)\n"
         );
     }
 }
